@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { FiSearch, FiChevronRight, FiPlus, FiX } from 'react-icons/fi';
+import { FiSearch, FiChevronRight, FiPlus, FiX, FiCheck } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AppShell } from '../../ui/AppShell/AppShell';
 import { Container, Typography, Card, Flex, InputField, Label, InputWrapper, BotaoPrimario, TextAreaField } from '../../ui/components/BaseUI';
@@ -71,6 +71,8 @@ const ExerciseCard = styled(Card)`
   align-items: center;
   transition: all 0.2s;
   cursor: pointer;
+  border: 1px solid ${({ $selected }) => ($selected ? 'var(--primary)' : 'var(--border)')};
+  background-color: ${({ $selected }) => ($selected ? 'rgba(var(--primary-rgb), 0.05)' : 'var(--card)')};
 
   &:hover {
     border-color: var(--primary);
@@ -90,6 +92,17 @@ const ExerciseImage = styled.div`
   background-size: cover;
   background-position: center;
   flex-shrink: 0;
+`;
+
+const SelectionBadge = styled.div`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
 `;
 
 const ModalOverlay = styled(motion.div)`
@@ -116,15 +129,39 @@ const ModalContent = styled(motion.div)`
   position: relative;
 `;
 
+const FloatingActionContainer = styled(motion.div)`
+  position: fixed;
+  bottom: 30px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 1000;
+  padding: 0 20px;
+  pointer-events: none; /* Container itself doesn't block clicks */
+
+  @media (min-width: 769px) {
+    /* Adjust for sidebar on desktop */
+    padding-left: 280px; 
+  }
+  
+  & > * {
+    pointer-events: auto; /* Re-enable for the button */
+  }
+`;
+
+
 const Biblioteca = () => {
   const [busca, setBusca] = useState('');
   const [categoriaAtiva, setCategoriaAtiva] = useState('Todos');
   const [modalAberto, setModalAberto] = useState(false);
+  const [selecionados, setSelecionados] = useState([]);
   const [novoEx, setNovoEx] = useState({
     nome: '',
     categoria: 'Peito',
     alvo: '',
-    gifUrl: ''
+    gifUrl: '',
+    dicas: ''
   });
   const [salvando, setSalvando] = useState(false);
 
@@ -136,6 +173,14 @@ const Biblioteca = () => {
   const categorias = ['Todos', 'Bíceps', 'Tríceps', 'Peito', 'Costas', 'Ombros', 'Quadríceps', 'Panturrilha', 'Abdômen', 'Sem Equipamento'];
   const categoriasSimplificadas = categorias.filter(c => c !== 'Todos').map(c => ({ label: c, value: c }));
 
+  const toggleSelecao = (ex) => {
+    if (selecionados.find(s => s.id === ex.id)) {
+      setSelecionados(selecionados.filter(s => s.id !== ex.id));
+    } else {
+      setSelecionados([...selecionados, ex]);
+    }
+  };
+
   const handleSalvarExercicio = async () => {
     if (!novoEx.nome || !novoEx.alvo) return toast.error('Preencha os campos obrigatórios');
     setSalvando(true);
@@ -146,7 +191,7 @@ const Biblioteca = () => {
       });
       toast.success('Exercício cadastrado!');
       setModalAberto(false);
-      setNovoEx({ nome: '', categoria: 'Peito', alvo: '', gifUrl: '' });
+      setNovoEx({ nome: '', categoria: 'Peito', alvo: '', gifUrl: '', dicas: '' });
     } catch (error) {
       toast.error('Erro ao cadastrar.');
     } finally {
@@ -154,19 +199,27 @@ const Biblioteca = () => {
     }
   };
 
-  const handleAddExercise = (ex) => {
+  const handleConfirmSelection = () => {
+    if (selecionados.length === 0) return;
+
     const draft = JSON.parse(localStorage.getItem('workout_draft_data') || '{}');
     const existingExercises = draft.exercicios || [];
-    const instanceId = `${ex.id || Date.now()}-${Date.now()}`;
+
+    const newExercises = selecionados.map(ex => ({
+      ...ex,
+      instanceId: `${ex.id || Date.now()}-${Math.random()}`,
+      series: 3,
+      reps: '10-12',
+      peso: ''
+    }));
+
     localStorage.setItem('workout_draft_data', JSON.stringify({
       ...draft,
-      exercicios: [...existingExercises, { ...ex, instanceId, series: 3, reps: '10-12', peso: '' }]
+      exercicios: [...existingExercises, ...newExercises]
     }));
-    toast.success(`${ex.nome} adicionado ao treino!`);
 
-    if (location.state?.fromCreate) {
-      navigate('/workouts/novo');
-    }
+    toast.success(`${selecionados.length} exercícios adicionados!`);
+    navigate('/workouts/novo');
   };
 
   const exerciciosExemplo = [
@@ -194,7 +247,7 @@ const Biblioteca = () => {
 
   return (
     <AppShell>
-      <Container>
+      <Container style={{ paddingBottom: isSelectionMode ? '100px' : '20px' }}>
         <Flex $justify="space-between" style={{ marginTop: '20px' }}>
           <Typography.H1 style={{ margin: 0 }}>Biblioteca</Typography.H1>
           <button
@@ -230,25 +283,33 @@ const Biblioteca = () => {
           <Typography.Body>Carregando exercícios...</Typography.Body>
         ) : (
           <ExerciseGrid>
-            {exerciciosFiltrados.map(ex => (
-              <ExerciseCard key={ex.id || Math.random()} onClick={() => !isSelectionMode && navigate(`/exercicio/${ex.id}`)}>
-                <ExerciseImage style={{ backgroundImage: `url(${ex.gifUrl})` }} />
-                <div style={{ flex: 1 }}>
-                  <h4 style={{ fontSize: '16px' }}>{ex.nome}</h4>
-                  <Typography.Small>{ex.alvo} • {ex.categoria}</Typography.Small>
-                </div>
-                {isSelectionMode ? (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleAddExercise(ex); }}
-                    style={{ backgroundColor: 'var(--primary)', color: '#000', padding: '5px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '700' }}
-                  >
-                    ADICIONAR
-                  </button>
-                ) : (
-                  <FiChevronRight color="var(--muted)" />
-                )}
-              </ExerciseCard>
-            ))}
+            {exerciciosFiltrados.map(ex => {
+              const isSelected = !!selecionados.find(s => s.id === (ex.id || ex.instanceId));
+              return (
+                <ExerciseCard
+                  key={ex.id || Math.random()}
+                  $selected={isSelected}
+                  onClick={() => isSelectionMode ? toggleSelecao(ex) : navigate(`/exercicio/${ex.id}`)}
+                >
+                  <ExerciseImage style={{ backgroundImage: `url(${ex.gifUrl})` }} />
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ fontSize: '16px' }}>{ex.nome}</h4>
+                    <Typography.Small>{ex.alvo} • {ex.categoria}</Typography.Small>
+                  </div>
+                  {isSelectionMode ? (
+                    isSelected ? (
+                      <SelectionBadge>
+                        <FiCheck size={16} />
+                      </SelectionBadge>
+                    ) : (
+                      <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid var(--border)' }} />
+                    )
+                  ) : (
+                    <FiChevronRight color="var(--muted)" />
+                  )}
+                </ExerciseCard>
+              );
+            })}
           </ExerciseGrid>
         )}
 
@@ -317,13 +378,35 @@ const Biblioteca = () => {
                 </InputWrapper>
 
                 <BotaoPrimario onClick={handleSalvarExercicio} disabled={salvando}>
-
                   {salvando ? 'Cadastrando...' : 'Salvar Exercício'}
                 </BotaoPrimario>
               </ModalContent>
             </ModalOverlay>
           )}
         </AnimatePresence>
+
+        <AnimatePresence>
+          {isSelectionMode && selecionados.length > 0 && (
+            <FloatingActionContainer
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+            >
+              <BotaoPrimario
+                style={{
+                  maxWidth: '400px',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                  height: '64px',
+                  fontSize: '18px'
+                }}
+                onClick={handleConfirmSelection}
+              >
+                Confirmar {selecionados.length} {selecionados.length === 1 ? 'exercício' : 'exercícios'}
+              </BotaoPrimario>
+            </FloatingActionContainer>
+          )}
+        </AnimatePresence>
+
 
         {!carregando && exerciciosFiltrados.length === 0 && (
           <div style={{ textAlign: 'center', marginTop: '40px' }}>

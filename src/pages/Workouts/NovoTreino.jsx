@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft, FiPlus, FiSave, FiTrash2 } from 'react-icons/fi';
@@ -109,6 +109,86 @@ const DragHandle = styled.div`
   }
 `;
 
+const IconButton = styled.button`
+  color: ${({ color }) => color || 'var(--muted)'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  
+  &:hover {
+    color: var(--primary);
+  }
+`;
+
+const SortableExerciseItem = ({ ex, index, removerExercicio, atualizarExercicio }) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id: ex.instanceId || ex.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 1000 : 1,
+        opacity: isDragging ? 0.5 : 1,
+        position: 'relative'
+    };
+
+    return (
+        <div ref={setNodeRef} style={style}>
+            <ExerciseItem>
+                <ExerciseThumb style={{ backgroundImage: `url(${ex.gifUrl})` }} />
+
+                <ExerciseInfo>
+                    <h4 style={{ fontSize: '14px', margin: 0 }}>{ex.nome}</h4>
+                    <CompactControls>
+                        <InputGroup>
+                            <span>Séries</span>
+                            <CompactInput
+                                type="number"
+                                value={ex.series || 3}
+                                onChange={(e) => atualizarExercicio(index, 'series', e.target.value)}
+                            />
+                        </InputGroup>
+                        <InputGroup>
+                            <span>Reps</span>
+                            <CompactInput
+                                type="text"
+                                value={ex.reps || '10'}
+                                onChange={(e) => atualizarExercicio(index, 'reps', e.target.value)}
+                                style={{ width: '60px' }}
+                            />
+                        </InputGroup>
+                        <InputGroup>
+                            <span>KG/SEG</span>
+                            <CompactInput
+                                type="text"
+                                value={ex.peso || ''}
+                                onChange={(e) => atualizarExercicio(index, 'peso', e.target.value)}
+                                style={{ width: '60px' }}
+                            />
+                        </InputGroup>
+                    </CompactControls>
+                </ExerciseInfo>
+
+                <Flex $gap="5px">
+                    <IconButton color="#ff5f5f" onClick={() => removerExercicio(index)}>
+                        <FiTrash2 size={18} />
+                    </IconButton>
+                    <DragHandle {...attributes} {...listeners}>
+                        <MdDragIndicator size={24} />
+                    </DragHandle>
+                </Flex>
+            </ExerciseItem>
+        </div>
+    );
+};
+
 const NovoTreino = () => {
     const { usuario } = useAuth();
     const navigate = useNavigate();
@@ -157,17 +237,21 @@ const NovoTreino = () => {
         }
     }, [nomeTreino, exercicios, id]);
 
-    const removerExercicio = (index) => {
-        const novaLista = [...exercicios];
-        novaLista.splice(index, 1);
-        setExercicios(novaLista);
-    };
+    const removerExercicio = useCallback((index) => {
+        setExercicios(prev => {
+            const novaLista = [...prev];
+            novaLista.splice(index, 1);
+            return novaLista;
+        });
+    }, []);
 
-    const atualizarExercicio = (index, campo, valor) => {
-        const novaLista = [...exercicios];
-        novaLista[index][campo] = valor;
-        setExercicios(novaLista);
-    };
+    const atualizarExercicio = useCallback((index, campo, valor) => {
+        setExercicios(prev => {
+            const novaLista = [...prev];
+            novaLista[index] = { ...novaLista[index], [campo]: valor };
+            return novaLista;
+        });
+    }, []);
 
     const salvarTreino = async () => {
         if (!nomeTreino) return toast.error('Dê um nome ao seu treino');
@@ -217,74 +301,6 @@ const NovoTreino = () => {
                 return arrayMove(items, oldIndex, newIndex);
             });
         }
-    };
-
-    const SortableExerciseItem = ({ ex, index }) => {
-        const {
-            attributes,
-            listeners,
-            setNodeRef,
-            transform,
-            transition,
-            isDragging
-        } = useSortable({ id: ex.instanceId || ex.id });
-
-        const style = {
-            transform: CSS.Transform.toString(transform),
-            transition,
-            zIndex: isDragging ? 1000 : 1,
-            opacity: isDragging ? 0.5 : 1,
-            position: 'relative'
-        };
-
-        return (
-            <div ref={setNodeRef} style={style}>
-                <ExerciseItem>
-                    <ExerciseThumb style={{ backgroundImage: `url(${ex.gifUrl})` }} />
-
-                    <ExerciseInfo>
-                        <h4 style={{ fontSize: '14px', margin: 0 }}>{ex.nome}</h4>
-                        <CompactControls>
-                            <InputGroup>
-                                <span>Séries</span>
-                                <CompactInput
-                                    type="number"
-                                    value={ex.series || 3}
-                                    onChange={(e) => atualizarExercicio(index, 'series', e.target.value)}
-                                />
-                            </InputGroup>
-                            <InputGroup>
-                                <span>Reps</span>
-                                <CompactInput
-                                    type="text"
-                                    value={ex.reps || '10'}
-                                    onChange={(e) => atualizarExercicio(index, 'reps', e.target.value)}
-                                    style={{ width: '60px' }}
-                                />
-                            </InputGroup>
-                            <InputGroup>
-                                <span>KG/SEG</span>
-                                <CompactInput
-                                    type="text"
-                                    value={ex.peso || ''}
-                                    onChange={(e) => atualizarExercicio(index, 'peso', e.target.value)}
-                                    style={{ width: '60px' }}
-                                />
-                            </InputGroup>
-                        </CompactControls>
-                    </ExerciseInfo>
-
-                    <Flex $gap="5px">
-                        <IconButton color="#ff5f5f" onClick={() => removerExercicio(index)}>
-                            <FiTrash2 size={18} />
-                        </IconButton>
-                        <DragHandle {...attributes} {...listeners}>
-                            <MdDragIndicator size={24} />
-                        </DragHandle>
-                    </Flex>
-                </ExerciseItem>
-            </div>
-        );
     };
 
     return (
@@ -337,6 +353,8 @@ const NovoTreino = () => {
                                     key={ex.instanceId || ex.id}
                                     ex={ex}
                                     index={index}
+                                    removerExercicio={removerExercicio}
+                                    atualizarExercicio={atualizarExercicio}
                                 />
                             ))}
                         </SortableContext>
