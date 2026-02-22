@@ -10,7 +10,7 @@ import EsqueciSenha from '../pages/Auth/EsqueciSenha/EsqueciSenha';
 import SetupWizard from '../pages/Setup/SetupWizard';
 import Home from '../pages/Home/Home';
 import Workouts from '../pages/Workouts/Workouts';
-import Biblioteca from '../pages/Biblioteca/Biblioteca';
+import Biblioteca from '../pages/biblioteca/Biblioteca';
 import Favoritos from '../pages/Favoritos/Favoritos';
 import Notificacoes from '../pages/Notificacoes/Notificacoes';
 import Perfil from '../pages/Perfil/Perfil';
