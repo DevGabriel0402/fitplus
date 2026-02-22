@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-
 import styled from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiPlus, FiSave, FiTrash2, FiChevronRight, FiMinus, FiMenu } from 'react-icons/fi';
+import { FiArrowLeft, FiPlus, FiSave, FiTrash2 } from 'react-icons/fi';
+import { MdDragIndicator } from 'react-icons/md';
 import { AppShell } from '../../ui/AppShell/AppShell';
 import { Container, Typography, Card, Flex, InputField, BotaoPrimario, Label, InputWrapper } from '../../ui/components/BaseUI';
-import CustomSelect from '../../ui/components/CustomSelect';
 import { db } from '../../firebase/firestore';
 
 import {
@@ -31,44 +30,82 @@ import { useAuth } from '../../contexts/AuthContexto';
 import toast from 'react-hot-toast';
 
 const ExerciseItem = styled(Card)`
-  padding: 15px;
-  margin-bottom: 15px;
-  border-left: 4px solid var(--primary);
-`;
-
-const SetRow = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1.5fr 1.5fr 40px;
-  gap: 10px;
+  padding: 10px;
+  margin-bottom: 12px;
+  display: flex;
   align-items: center;
-  margin-top: 10px;
-`;
-
-const SmallInput = styled.input`
-  width: 100%;
-  height: 40px;
-  background-color: var(--surface);
+  gap: 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0 10px;
-  color: var(--text);
-  text-align: center;
-  font-size: 14px;
-
-  &:focus {
+  transition: all 0.2s;
+  
+  &:hover {
     border-color: var(--primary);
   }
 `;
 
-const IconButton = styled.button`
-  color: ${({ color }) => color || 'var(--muted)'};
+const ExerciseThumb = styled.div`
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  background-color: var(--surface);
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+`;
+
+const ExerciseInfo = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const CompactControls = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+`;
+
+const CompactInput = styled.input`
+  width: 45px;
+  height: 32px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  text-align: center;
+  font-weight: 600;
+
+  &:focus {
+    border-color: var(--primary);
+    outline: none;
+  }
+`;
+
+const InputGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  
+  span {
+    font-size: 9px;
+    color: var(--muted);
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+`;
+
+const DragHandle = styled.div`
+  color: var(--muted);
+  cursor: grab;
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
+  padding: 5px;
   
-  &:hover {
-    color: var(--primary);
+  &:active {
+    cursor: grabbing;
   }
 `;
 
@@ -81,7 +118,6 @@ const NovoTreino = () => {
     const [salvando, setSalvando] = useState(false);
     const [carregando, setCarregando] = useState(false);
 
-    // Carregar dados se estiver editando
     useEffect(() => {
         if (id) {
             const fetchTreino = async () => {
@@ -96,7 +132,6 @@ const NovoTreino = () => {
                             ...ex,
                             instanceId: ex.instanceId || `${ex.id}-${Date.now()}-${i}`
                         })));
-
                     } else {
                         toast.error('Treino não encontrado.');
                         navigate('/workouts');
@@ -110,24 +145,17 @@ const NovoTreino = () => {
             };
             fetchTreino();
         } else {
-            // Se não houver ID, tenta carregar o rascunho (apenas para treinos NOVOS)
             const draft = JSON.parse(localStorage.getItem('workout_draft_data') || '{}');
             if (draft.nomeTreino) setNomeTreino(draft.nomeTreino);
             if (draft.exercicios) setExercicios(draft.exercicios);
         }
-    }, [id, usuario.uid]);
+    }, [id, usuario.uid, navigate]);
 
-    // Salvar rascunho apenas se NÃO estiver editando um treino existente
     useEffect(() => {
         if (!id && (nomeTreino || exercicios.length > 0)) {
             localStorage.setItem('workout_draft_data', JSON.stringify({ nomeTreino, exercicios }));
         }
     }, [nomeTreino, exercicios, id]);
-
-
-    const handleAddExercise = () => {
-        navigate('/biblioteca', { state: { fromCreate: true } });
-    };
 
     const removerExercicio = (index) => {
         const novaLista = [...exercicios];
@@ -173,19 +201,6 @@ const NovoTreino = () => {
         }
     };
 
-
-    const handleBack = () => {
-        if (nomeTreino || exercicios.length > 0) {
-            if (window.confirm('Deseja descartar as alterações?')) {
-                localStorage.removeItem('workout_draft_data');
-                navigate('/workouts');
-            }
-        } else {
-            navigate('/workouts');
-        }
-    };
-
-
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
@@ -195,7 +210,7 @@ const NovoTreino = () => {
 
     const handleDragEnd = (event) => {
         const { active, over } = event;
-        if (active.id !== over.id) {
+        if (active && over && active.id !== over.id) {
             setExercicios((items) => {
                 const oldIndex = items.findIndex(ex => (ex.instanceId || ex.id) === active.id);
                 const newIndex = items.findIndex(ex => (ex.instanceId || ex.id) === over.id);
@@ -225,55 +240,48 @@ const NovoTreino = () => {
         return (
             <div ref={setNodeRef} style={style}>
                 <ExerciseItem>
-                    <Flex $justify="space-between">
-                        <Flex $gap="10px">
-                            <div {...attributes} {...listeners} style={{ cursor: 'grab', display: 'flex', alignItems: 'center' }}>
-                                <FiMenu size={20} color="var(--primary)" />
-                            </div>
-                            <Typography.H2 style={{ fontSize: '16px', margin: 0 }}>{ex.nome}</Typography.H2>
-                        </Flex>
+                    <ExerciseThumb style={{ backgroundImage: `url(${ex.gifUrl})` }} />
+
+                    <ExerciseInfo>
+                        <h4 style={{ fontSize: '14px', margin: 0 }}>{ex.nome}</h4>
+                        <CompactControls>
+                            <InputGroup>
+                                <span>Séries</span>
+                                <CompactInput
+                                    type="number"
+                                    value={ex.series || 3}
+                                    onChange={(e) => atualizarExercicio(index, 'series', e.target.value)}
+                                />
+                            </InputGroup>
+                            <InputGroup>
+                                <span>Reps</span>
+                                <CompactInput
+                                    type="text"
+                                    value={ex.reps || '10'}
+                                    onChange={(e) => atualizarExercicio(index, 'reps', e.target.value)}
+                                    style={{ width: '60px' }}
+                                />
+                            </InputGroup>
+                            <InputGroup>
+                                <span>KG/SEG</span>
+                                <CompactInput
+                                    type="text"
+                                    value={ex.peso || ''}
+                                    onChange={(e) => atualizarExercicio(index, 'peso', e.target.value)}
+                                    style={{ width: '60px' }}
+                                />
+                            </InputGroup>
+                        </CompactControls>
+                    </ExerciseInfo>
+
+                    <Flex $gap="5px">
                         <IconButton color="#ff5f5f" onClick={() => removerExercicio(index)}>
                             <FiTrash2 size={18} />
                         </IconButton>
+                        <DragHandle {...attributes} {...listeners}>
+                            <MdDragIndicator size={24} />
+                        </DragHandle>
                     </Flex>
-
-                    <div style={{ marginTop: '15px' }}>
-                        <CustomSelect
-                            label="SÉRIES"
-                            value={ex.series || 3}
-                            onChange={(val) => atualizarExercicio(index, 'series', val)}
-                            options={[
-                                { label: '1 Série', value: 1 },
-                                { label: '2 Séries', value: 2 },
-                                { label: '3 Séries', value: 3 },
-                                { label: '4 Séries', value: 4 },
-                                { label: '5 Séries', value: 5 },
-                                { label: '6 Séries', value: 6 },
-                            ]}
-                        />
-                        <CustomSelect
-                            label="REPS"
-                            value={ex.reps || '10-12'}
-                            onChange={(val) => atualizarExercicio(index, 'reps', val)}
-                            options={[
-                                { label: '6-8 Reps', value: '6-8' },
-                                { label: '8-10 Reps', value: '8-10' },
-                                { label: '10-12 Reps', value: '10-12' },
-                                { label: '12-15 Reps', value: '12-15' },
-                                { label: 'Falha', value: 'Falha' },
-                            ]}
-                        />
-                        <InputWrapper style={{ marginBottom: 0 }}>
-                            <Label>PESO (KG)</Label>
-                            <InputField
-                                type="number"
-                                placeholder="0"
-                                value={ex.peso || ''}
-                                onChange={(e) => atualizarExercicio(index, 'peso', e.target.value)}
-                                style={{ height: '48px' }}
-                            />
-                        </InputWrapper>
-                    </div>
                 </ExerciseItem>
             </div>
         );
@@ -283,15 +291,12 @@ const NovoTreino = () => {
         <AppShell hideTabbar>
             <Container>
                 <Flex $justify="space-between" style={{ marginTop: '20px', marginBottom: '30px' }}>
-                    <button onClick={handleBack}><FiArrowLeft size={24} color="var(--text)" /></button>
+                    <button onClick={() => navigate('/workouts')}><FiArrowLeft size={24} color="var(--text)" /></button>
                     <Typography.H2 style={{ margin: 0 }}>{id ? 'Editar Ficha' : 'Criar Ficha'}</Typography.H2>
                     <button onClick={salvarTreino} disabled={salvando} style={{ color: 'var(--primary)' }}>
                         <FiSave size={24} />
                     </button>
                 </Flex>
-
-                {carregando && <Typography.Body style={{ textAlign: 'center', marginBottom: '20px' }}>Carregando dados do treino...</Typography.Body>}
-
 
                 <InputWrapper>
                     <Label>Nome do Treino</Label>
@@ -350,6 +355,4 @@ const NovoTreino = () => {
     );
 };
 
-
 export default NovoTreino;
-

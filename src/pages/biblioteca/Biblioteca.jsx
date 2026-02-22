@@ -307,7 +307,17 @@ const Biblioteca = () => {
                   />
                 </InputWrapper>
 
+                <InputWrapper>
+                  <Label>Dicas de Execução (Opcional)</Label>
+                  <TextAreaField
+                    placeholder="Ex: Mantenha as costas retas e o abdômen contraído..."
+                    value={novoEx.dicas || ''}
+                    onChange={(e) => setNovoEx({ ...novoEx, dicas: e.target.value })}
+                  />
+                </InputWrapper>
+
                 <BotaoPrimario onClick={handleSalvarExercicio} disabled={salvando}>
+
                   {salvando ? 'Cadastrando...' : 'Salvar Exercício'}
                 </BotaoPrimario>
               </ModalContent>
