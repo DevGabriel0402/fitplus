@@ -202,7 +202,7 @@ const Home = () => {
   const SelectedIcon = IconsFa[ajustes?.iconePainel] || IconsFa.FaDumbbell;
 
 
-  if (carregando) return <div style={{ color: 'white', padding: '20px' }}>Carregando...</div>;
+  if (carregando) return <div style={{ color: 'var(--text)', padding: '20px' }}>Carregando...</div>;
 
   return (
     <AppShell>

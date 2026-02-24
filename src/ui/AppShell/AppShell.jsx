@@ -62,7 +62,7 @@ const SidebarItem = styled(NavLink)`
   }
 
   &:hover:not(.active) {
-    background-color: rgba(255, 255, 255, 0.03);
+    background-color: rgba(0, 0, 0, 0.03);
   }
 
   svg { font-size: 20px; }

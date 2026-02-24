@@ -108,8 +108,6 @@ export const Card = styled.div`
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 `;
 
-
-
 export const Container = styled.div`
   padding: 20px;
   width: 100%;
