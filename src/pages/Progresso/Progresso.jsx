@@ -1,3 +1,13 @@
+import React, { useState, useEffect } from 'react';
+import styled from 'styled-components';
+import { FiCalendar } from 'react-icons/fi';
+import { AppShell } from '../../ui/AppShell/AppShell';
+import { Container, Typography, Card, Flex } from '../../ui/components/BaseUI';
+import { useUsuario } from '../../hooks/useUsuario';
+import { db } from '../../firebase/firestore';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { useAuth } from '../../contexts/AuthContexto';
+
 import {
     BarChart,
     Bar as ReBar,
@@ -15,15 +25,15 @@ import {
 import { ptBR } from 'date-fns/locale';
 
 const StatsCard = styled(Card)`
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(10px);
+  background: #FFFFFF;
   margin-bottom: 25px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
 `;
 
 const TabsWrapper = styled.div`
   display: flex;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(0, 0, 0, 0.04);
   padding: 4px;
   border-radius: 12px;
   margin-bottom: 25px;
@@ -33,8 +43,9 @@ const Tab = styled.button`
   flex: 1;
   padding: 8px;
   border-radius: 8px;
-  background-color: ${({ $active }) => ($active ? 'rgba(255, 255, 255, 0.1)' : 'transparent')};
+  background-color: ${({ $active }) => ($active ? '#FFFFFF' : 'transparent')};
   color: ${({ $active }) => ($active ? 'var(--primary)' : 'var(--muted)')};
+  box-shadow: ${({ $active }) => ($active ? '0 2px 8px rgba(0, 0, 0, 0.08)' : 'none')};
   font-weight: 600;
   font-size: 13px;
 `;
@@ -42,11 +53,11 @@ const Tab = styled.button`
 
 const ChartContainer = styled(Card)`
   height: 240px;
-  background: rgba(255, 255, 255, 0.02);
+  background: #FFFFFF;
   display: flex;
   flex-direction: column;
   padding: 15px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 `;
 
 const ActivityItem = styled.div`
@@ -54,10 +65,11 @@ const ActivityItem = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 12px 15px;
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: #FFFFFF;
   border-radius: 12px;
   margin-bottom: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 `;
 
 const Progresso = () => {

@@ -4,15 +4,19 @@ export const BotaoPrimario = styled.button`
   width: 100%;
   height: 56px;
   background-color: var(--primary);
-  color: #000;
-  border-radius: var(--radius-pill);
+  color: #fff;
+  border-radius: ${({ theme }) => theme.radius.pill};
   font-size: 16px;
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-radius: ${({ theme }) => theme.radius.pill};
+  box-shadow: 0 8px 16px rgba(108, 71, 255, 0.2);
+
+  &:active {
+    transform: scale(0.98);
+  }
 
   &:disabled {
     opacity: 0.5;
@@ -23,7 +27,7 @@ export const BotaoPrimario = styled.button`
 export const BotaoSecundario = styled.button`
   width: 100%;
   height: 56px;
-  background-color: var(--surface);
+  background-color: transparent;
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: ${({ theme }) => theme.radius.pill};
@@ -33,6 +37,10 @@ export const BotaoSecundario = styled.button`
   align-items: center;
   justify-content: center;
   gap: 8px;
+
+  &:active {
+    transform: scale(0.98);
+  }
 
   &:disabled {
     opacity: 0.5;
@@ -97,8 +105,10 @@ export const Card = styled.div`
   border-radius: ${({ theme }) => theme.radius.medium};
   padding: 20px;
   border: 1px solid var(--border);
-  box-shadow: ${({ theme }) => theme.shadows.soft};
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 `;
+
+
 
 export const Container = styled.div`
   padding: 20px;

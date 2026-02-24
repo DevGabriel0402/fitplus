@@ -1,15 +1,15 @@
 export const tema = {
   colors: {
-    bg: '#0b0b0f',
-    surface: '#12121a',
-    card: '#171726',
-    primary: '#9b8cff',
-    secondary: '#d7ff4a',
-    text: '#ffffff',
-    muted: 'rgba(255, 255, 255, 0.65)',
-    border: 'rgba(255, 255, 255, 0.08)',
-    error: '#ff5f5f',
-    success: '#00c853'
+    bg: '#F8F9FE',
+    surface: '#FFFFFF',
+    card: '#FFFFFF',
+    primary: '#6C47FF',
+    secondary: '#8BC34A',
+    text: '#1A1A1E',
+    muted: 'rgba(0, 0, 0, 0.5)',
+    border: 'rgba(0, 0, 0, 0.08)',
+    error: '#E53935',
+    success: '#43A047'
   },
   radius: {
     small: '8px',

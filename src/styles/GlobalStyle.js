@@ -25,6 +25,7 @@ export const GlobalStyle = createGlobalStyle`
     --text: ${({ theme }) => theme.colors.text};
     --muted: ${({ theme }) => theme.colors.muted};
     --border: ${({ theme }) => theme.colors.border};
+    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
 
 
