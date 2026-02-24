@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import { AppShell } from '../../ui/AppShell/AppShell';
 import { Container, Typography, Card, Flex, BotaoPrimario } from '../../ui/components/BaseUI';
 import { db } from '../../firebase/firestore';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContexto';
 import toast from 'react-hot-toast';
 
@@ -61,7 +61,9 @@ const ExecucaoTreino = () => {
     const [indexExercicio, setIndexExercicio] = useState(0);
     const [setsCompletos, setSetsCompletos] = useState([]);
     const [segundos, setSegundos] = useState(0);
+    const [inicioTimestamp, setInicioTimestamp] = useState(null);
 
+    // Carregar treino do Firestore
     useEffect(() => {
         const fetchTreino = async () => {
             try {
@@ -79,10 +81,52 @@ const ExecucaoTreino = () => {
         fetchTreino();
     }, [id, usuario.uid]);
 
+    // PERSISTÊNCIA & TIMER: Carregar estado salvo ao iniciar
     useEffect(() => {
-        const timer = setInterval(() => setSegundos(s => s + 1), 1000);
-        return () => clearInterval(timer);
-    }, []);
+        if (!loading && treino && !inicioTimestamp) {
+            const key = `workout_session_${id}_${usuario.uid}`;
+            const saved = localStorage.getItem(key);
+
+            let startTime;
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                setIndexExercicio(parsed.index || 0);
+                setSetsCompletos(parsed.sets || []);
+                startTime = parsed.startTime || Date.now();
+                toast.success('Retomando treino de onde parou!');
+            } else {
+                startTime = Date.now();
+            }
+
+            setInicioTimestamp(startTime);
+            // Calcula o tempo inicial imediatamente
+            setSegundos(Math.floor((Date.now() - startTime) / 1000));
+        }
+    }, [loading, treino, id, usuario.uid, inicioTimestamp]);
+
+    // TIMER: Mantém o cronômetro atualizado
+    useEffect(() => {
+        let interval;
+        if (inicioTimestamp) {
+            interval = setInterval(() => {
+                const decorrido = Math.floor((Date.now() - inicioTimestamp) / 1000);
+                setSegundos(decorrido);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [inicioTimestamp]);
+
+    // PERSISTÊNCIA: Salvar estado quando houver mudanças (exceto segundos, que salvamos via timestamp)
+    useEffect(() => {
+        if (treino && !loading && inicioTimestamp) {
+            const session = {
+                index: indexExercicio,
+                sets: setsCompletos,
+                startTime: inicioTimestamp
+            };
+            localStorage.setItem(`workout_session_${id}_${usuario.uid}`, JSON.stringify(session));
+        }
+    }, [indexExercicio, setsCompletos, inicioTimestamp, id, usuario.uid, treino, loading]);
 
     const formatTime = (sec) => {
         const m = Math.floor(sec / 60);
@@ -96,6 +140,32 @@ const ExecucaoTreino = () => {
             setSetsCompletos(setsCompletos.filter(k => k !== key));
         } else {
             setSetsCompletos([...setsCompletos, key]);
+        }
+    };
+
+    const finalizarTreino = async () => {
+        try {
+            const historicoRef = collection(db, `treinos_historico/${usuario.uid}/lista`);
+            await addDoc(historicoRef, {
+                treinoId: id,
+                nomeTreino: treino.nomeTreino,
+                data: new Date().toISOString(),
+                duracaoSegundos: segundos,
+                setsCompletosTotal: setsCompletos.length,
+                totalSetsPrevistos: treino.exercicios.reduce((acc, ex) => acc + Number(ex.series || 0), 0),
+                resumo: treino.exercicios.map((ex, idx) => ({
+                    nome: ex.nome,
+                    setsTotais: Number(ex.series || 0),
+                    setsFeitos: setsCompletos.filter(s => s.startsWith(`${idx}-`)).length
+                }))
+            });
+
+            localStorage.removeItem(`workout_session_${id}_${usuario.uid}`);
+            toast.success('Treino finalizado! Ótimo trabalho.');
+            navigate('/progresso');
+        } catch (error) {
+            console.error("Erro ao salvar histórico:", error);
+            toast.error("Erro ao salvar o treino.");
         }
     };
 
@@ -178,8 +248,7 @@ const ExecucaoTreino = () => {
                             if (indexExercicio < totalExercicios - 1) {
                                 setIndexExercicio(i => i + 1);
                             } else {
-                                toast.success('Treino finalizado! Ótimo trabalho.');
-                                navigate('/home');
+                                finalizarTreino();
                             }
                         }}
                     >

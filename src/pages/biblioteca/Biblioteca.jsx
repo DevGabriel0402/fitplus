@@ -8,9 +8,10 @@ import { Container, Typography, Card, Flex, InputField, Label, InputWrapper, Bot
 import CustomSelect from '../../ui/components/CustomSelect';
 import { useColecao } from '../../hooks/useColecao';
 import { db } from '../../firebase/firestore';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FiEdit2 } from 'react-icons/fi';
 
 const SearchBar = styled.div`
   position: relative;
@@ -73,6 +74,7 @@ const ExerciseCard = styled(Card)`
   cursor: pointer;
   border: 1px solid ${({ $selected }) => ($selected ? 'var(--primary)' : 'var(--border)')};
   background-color: ${({ $selected }) => ($selected ? 'rgba(var(--primary-rgb), 0.05)' : 'var(--card)')};
+  position: relative;
 
   &:hover {
     border-color: var(--primary);
@@ -156,6 +158,8 @@ const Biblioteca = () => {
   const [categoriaAtiva, setCategoriaAtiva] = useState('Todos');
   const [modalAberto, setModalAberto] = useState(false);
   const [selecionados, setSelecionados] = useState([]);
+  const [editMode, setEditMode] = useState(false);
+  const [exercicioIdEmEdicao, setExercicioIdEmEdicao] = useState(null);
   const [novoEx, setNovoEx] = useState({
     nome: '',
     categoria: 'Peito',
@@ -170,7 +174,7 @@ const Biblioteca = () => {
   const location = useLocation();
   const isSelectionMode = location.state?.fromCreate || location.state?.pickingForWorkout;
 
-  const categorias = ['Todos', 'Bíceps', 'Tríceps', 'Peito', 'Costas', 'Ombros', 'Quadríceps', 'Panturrilha', 'Abdômen', 'Sem Equipamento'];
+  const categorias = ['Todos', 'Bíceps', 'Tríceps', 'Peito', 'Costas', 'Ombros', 'Quadríceps', 'Panturrilha', 'Abdômen', 'Alongamento', 'Sem Equipamento'];
   const categoriasSimplificadas = categorias.filter(c => c !== 'Todos').map(c => ({ label: c, value: c }));
 
   const toggleSelecao = (ex) => {
@@ -181,19 +185,50 @@ const Biblioteca = () => {
     }
   };
 
+  const abrirModalCadastro = () => {
+    setEditMode(false);
+    setExercicioIdEmEdicao(null);
+    setNovoEx({ nome: '', categoria: 'Peito', alvo: '', gifUrl: '', dicas: '' });
+    setModalAberto(true);
+  };
+
+  const abrirModalEdicao = (ex, e) => {
+    e.stopPropagation();
+    setEditMode(true);
+    setExercicioIdEmEdicao(ex.id);
+    setNovoEx({
+      nome: ex.nome || '',
+      categoria: ex.categoria || 'Peito',
+      alvo: ex.alvo || '',
+      gifUrl: ex.gifUrl || '',
+      dicas: ex.dicas || ''
+    });
+    setModalAberto(true);
+  };
+
   const handleSalvarExercicio = async () => {
     if (!novoEx.nome || !novoEx.alvo) return toast.error('Preencha os campos obrigatórios');
     setSalvando(true);
     try {
-      await addDoc(collection(db, 'exercicios'), {
-        ...novoEx,
-        criadoEm: serverTimestamp()
-      });
-      toast.success('Exercício cadastrado!');
+      if (editMode && exercicioIdEmEdicao) {
+        const docRef = doc(db, 'exercicios', exercicioIdEmEdicao);
+        await updateDoc(docRef, {
+          ...novoEx,
+          atualizadoEm: serverTimestamp()
+        });
+        toast.success('Exercício atualizado!');
+      } else {
+        await addDoc(collection(db, 'exercicios'), {
+          ...novoEx,
+          criadoEm: serverTimestamp()
+        });
+        toast.success('Exercício cadastrado!');
+      }
       setModalAberto(false);
       setNovoEx({ nome: '', categoria: 'Peito', alvo: '', gifUrl: '', dicas: '' });
     } catch (error) {
-      toast.error('Erro ao cadastrar.');
+      console.error("Erro ao salvar:", error);
+      toast.error('Erro ao salvar.');
     } finally {
       setSalvando(false);
     }
@@ -251,7 +286,7 @@ const Biblioteca = () => {
         <Flex $justify="space-between" style={{ marginTop: '20px' }}>
           <Typography.H1 style={{ margin: 0 }}>Biblioteca</Typography.H1>
           <button
-            onClick={() => setModalAberto(true)}
+            onClick={abrirModalCadastro}
             style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: '700' }}
           >
             <FiPlus /> CADASTRAR
@@ -305,7 +340,12 @@ const Biblioteca = () => {
                       <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid var(--border)' }} />
                     )
                   ) : (
-                    <FiChevronRight color="var(--muted)" />
+                    <Flex $gap="15px">
+                      <button onClick={(e) => abrirModalEdicao(ex, e)} style={{ padding: '8px', color: 'var(--primary)' }}>
+                        <FiEdit2 size={18} />
+                      </button>
+                      <FiChevronRight color="var(--muted)" />
+                    </Flex>
                   )}
                 </ExerciseCard>
               );
@@ -332,7 +372,7 @@ const Biblioteca = () => {
                   <FiX size={24} />
                 </button>
 
-                <Typography.H2 style={{ marginBottom: '25px' }}>Novo Exercício</Typography.H2>
+                <Typography.H2 style={{ marginBottom: '25px' }}>{editMode ? 'Editar Exercício' : 'Novo Exercício'}</Typography.H2>
 
                 <InputWrapper>
                   <Label>Nome</Label>
@@ -378,7 +418,7 @@ const Biblioteca = () => {
                 </InputWrapper>
 
                 <BotaoPrimario onClick={handleSalvarExercicio} disabled={salvando}>
-                  {salvando ? 'Cadastrando...' : 'Salvar Exercício'}
+                  {salvando ? 'Salvando...' : (editMode ? 'Atualizar Exercício' : 'Salvar Exercício')}
                 </BotaoPrimario>
               </ModalContent>
             </ModalOverlay>

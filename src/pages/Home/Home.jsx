@@ -238,9 +238,9 @@ const Home = () => {
           <div className="icon" style={{ color: '#ff8c00' }}><FiUser /></div>
           <span>Perfil</span>
         </ShortcutItem>
-        <ShortcutItem onClick={() => window.location.href = 'https://youtube.com'}>
-          <div className="icon" style={{ color: '#ff0000' }}><FiPlay /></div>
-          <span>Vídeos</span>
+        <ShortcutItem onClick={() => navigate('/progresso')}>
+          <div className="icon" style={{ color: '#ff8c00' }}><FiActivity /></div>
+          <span>Histórico</span>
         </ShortcutItem>
       </ShortcutGrid>
 

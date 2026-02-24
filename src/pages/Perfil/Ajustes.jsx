@@ -74,7 +74,7 @@ const Ajustes = () => {
 
     const cores = [
         '#9b8cff', '#50fa7b', '#ff79c6', '#8be9fd', '#ffb86c',
-        '#ff5555', '#f1fa8c', '#bd93f9', '#ffcc00', '#00ffcc'
+        '#CB1313', '#ff5555', '#f1fa8c', '#bd93f9', '#ffcc00', '#00ffcc'
     ];
 
     const iconesFitness = [
