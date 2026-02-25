@@ -8,6 +8,21 @@ import { db } from '../../firebase/firestore';
 import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
+const ActionArea = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  background: linear-gradient(to top, var(--bg) 60%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
 const NovoArtigo = () => {
     const navigate = useNavigate();
     const { id } = useParams();
@@ -91,9 +106,20 @@ const NovoArtigo = () => {
                     </InputWrapper>
                 </Card>
 
-                <BotaoPrimario onClick={salvar} disabled={salvando} style={{ marginTop: '20px', marginBottom: '40px' }}>
-                    {salvando ? 'Salvando...' : 'Salvar no Banco'}
-                </BotaoPrimario>
+                <div style={{ height: '120px' }} />
+
+                <ActionArea>
+                    <BotaoPrimario
+                        onClick={salvar}
+                        disabled={salvando}
+                        style={{
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                            maxWidth: '500px'
+                        }}
+                    >
+                        {salvando ? 'Salvando...' : 'Salvar no Banco'}
+                    </BotaoPrimario>
+                </ActionArea>
             </Container>
         </AppShell>
     );

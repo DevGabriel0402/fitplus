@@ -22,6 +22,7 @@ import NovoTreino from '../pages/Workouts/NovoTreino';
 import ExecucaoTreino from '../pages/Workouts/ExecucaoTreino';
 import DetalhesTreino from '../pages/Workouts/DetalhesTreino';
 import DetalhesExercicio from '../pages/biblioteca/DetalhesExercicio';
+import DetalhesArtigo from '../pages/Artigos/DetalhesArtigo';
 
 // Admin / Gerenciamento
 import GerenciarSugestoes from '../pages/Admin/GerenciarSugestoes';
@@ -137,6 +138,12 @@ export const Rotas = () => {
             <Route path="/notificacoes" element={
                 <RotaPrivada>
                     <Notificacoes />
+                </RotaPrivada>
+            } />
+
+            <Route path="/artigo/:id" element={
+                <RotaPrivada>
+                    <DetalhesArtigo />
                 </RotaPrivada>
             } />
 

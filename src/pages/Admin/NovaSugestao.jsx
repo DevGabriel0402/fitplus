@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft, FiPlus, FiSave, FiTrash2, FiImage } from 'react-icons/fi';
 import { MdDragIndicator } from 'react-icons/md';
 import { AppShell } from '../../ui/AppShell/AppShell';
-import { Container, Typography, Card, Flex, InputField, BotaoPrimario, Label, InputWrapper } from '../../ui/components/BaseUI';
+import { Container, Typography, Card, Flex, InputField, BotaoPrimario, Label } from '../../ui/components/BaseUI';
 import { db } from '../../firebase/firestore';
 import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -14,6 +14,27 @@ import toast from 'react-hot-toast';
 
 const ExerciseItem = styled(Card)`
   padding: 10px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border);
+`;
+const InputWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const ActionArea = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  background: linear-gradient(to top, var(--bg) 60%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
 `;
 const ExerciseThumb = styled.div`
   width: 50px; height: 50px; border-radius: 8px; background-color: var(--surface); background-size: cover; background-position: center;
@@ -178,8 +199,30 @@ const NovaSugestao = () => {
                     </SortableContext>
                 </DndContext>
 
-                <BotaoPrimario onClick={salvar} disabled={salvando} style={{ marginTop: '20px' }}>{salvando ? 'Salvando...' : 'Salvar no Banco'}</BotaoPrimario>
-                <button onClick={cancelar} style={{ width: '100%', marginTop: '15px', color: 'var(--muted)', fontWeight: '600', padding: '10px', marginBottom: '40px' }}>Cancelar</button>
+                <div style={{ height: '180px' }} />
+
+                <ActionArea>
+                    <BotaoPrimario
+                        onClick={salvar}
+                        disabled={salvando}
+                        style={{
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                            maxWidth: '500px'
+                        }}
+                    >
+                        {salvando ? 'Salvando...' : 'Salvar no Banco'}
+                    </BotaoPrimario>
+                    <button
+                        onClick={cancelar}
+                        style={{
+                            color: 'var(--muted)',
+                            fontWeight: '600',
+                            padding: '5px'
+                        }}
+                    >
+                        Cancelar Edição
+                    </button>
+                </ActionArea>
             </Container>
         </AppShell>
     );

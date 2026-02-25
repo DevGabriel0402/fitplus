@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { FiStar } from 'react-icons/fi';
+import { FiStar, FiHeart } from 'react-icons/fi';
 import { AppShell } from '../../ui/AppShell/AppShell';
 import { Container, Typography, Card } from '../../ui/components/BaseUI';
 import { useAuth } from '../../contexts/AuthContexto';
@@ -107,7 +107,13 @@ const Favoritos = () => {
                                     {fav.subtitulo || fav.categoria} {fav.duracao && `• ${fav.duracao}`}
                                 </Typography.Small>
                             </div>
-                            <StarIcon><FiStar fill="var(--primary)" /></StarIcon>
+                            <StarIcon style={{ color: fav.tipo === 'artigo' ? '#FF4B4B' : '#FFD700' }}>
+                                {fav.tipo === 'artigo' ? (
+                                    <FiHeart fill="#FF4B4B" />
+                                ) : (
+                                    <FiStar fill="#FFD700" />
+                                )}
+                            </StarIcon>
                         </FavoriteCard>
                     ))
                 )}

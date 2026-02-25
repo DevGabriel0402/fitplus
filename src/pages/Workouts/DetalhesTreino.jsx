@@ -57,6 +57,21 @@ const ExerciseThumb = styled.div`
   background-image: url("${({ $url }) => $url}");
 `;
 
+const ActionArea = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  background: linear-gradient(to top, var(--bg) 60%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
 import { useColecao } from '../../hooks/useColecao';
 
 const DetalhesTreino = () => {
@@ -153,19 +168,19 @@ const DetalhesTreino = () => {
                             await setDoc(docRef, {
                                 id, tipo: 'treino', titulo: treino.nomeTreino, image: treino.image,
                                 path: `/detalhes-treino/${id}`, subtitulo: `${treino.nivel} • ${treino.duracao}`,
-                                favoritadoEm: new Date().toISOString()
+                                criadoEm: new Date().toISOString()
                             });
                             toast.success('Favoritado!');
                         }
                     }}
                     style={{
                         position: 'absolute', top: '30px', right: '20px', zIndex: 10,
-                        color: listaFavs.some(f => f.id === id) ? 'var(--primary)' : 'white',
+                        color: listaFavs.some(f => f.id === id) ? '#FFD700' : 'white',
                         backgroundColor: 'rgba(0,0,0,0.3)', width: '40px', height: '40px', borderRadius: '50%',
                         display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}
                 >
-                    <FiStar size={24} fill={listaFavs.some(f => f.id === id) ? 'var(--primary)' : 'none'} />
+                    <FiStar size={24} fill={listaFavs.some(f => f.id === id) ? '#FFD700' : 'none'} />
                 </button>
             </DetailsHeader>
 
@@ -196,12 +211,19 @@ const DetalhesTreino = () => {
                     </ExerciseItem>
                 ))}
 
-                <BotaoPrimario
-                    style={{ marginTop: '30px', position: 'sticky', bottom: '20px' }}
-                    onClick={() => navigate(`/workouts/execucao/${id}`)}
-                >
-                    Começar Treino <FiPlay />
-                </BotaoPrimario>
+                <div style={{ height: '100px' }} />
+
+                <ActionArea>
+                    <BotaoPrimario
+                        style={{
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                            maxWidth: '500px'
+                        }}
+                        onClick={() => navigate(`/workouts/execucao/${id}`)}
+                    >
+                        Começar Treino <FiPlay />
+                    </BotaoPrimario>
+                </ActionArea>
             </Container>
         </AppShell>
     );

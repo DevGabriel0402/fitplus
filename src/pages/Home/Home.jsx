@@ -169,12 +169,12 @@ const Home = () => {
     } else {
       const data = {
         id: item.id, tipo, titulo: item.nomeTreino || item.titulo, image: item.image,
-        path: tipo === 'treino' ? `/detalhes-treino/${item.id}` : `/home`,
+        path: tipo === 'treino' ? `/detalhes-treino/${item.id}` : `/artigo/${item.id}`,
         subtitulo: tipo === 'treino' ? `${item.nivel} • ${item.duracao}` : item.categoria,
-        favoritadoEm: new Date().toISOString()
+        criadoEm: new Date().toISOString()
       };
       await setDoc(docRef, data);
-      toast.success('Adicionado aos favoritos!');
+      toast.success(tipo === 'treino' ? 'Treino favoritado! ⭐' : 'Artigo favoritado! ❤️');
     }
   };
 
@@ -242,10 +242,10 @@ const Home = () => {
                 style={{
                   position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.4)',
                   border: 'none', borderRadius: '50%', width: 32, height: 32,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: isFavorito(treino.id) ? 'var(--primary)' : 'white'
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: isFavorito(treino.id) ? '#FFD700' : 'white'
                 }}
               >
-                <FiStar fill={isFavorito(treino.id) ? 'var(--primary)' : 'none'} size={18} />
+                <FiStar fill={isFavorito(treino.id) ? '#FFD700' : 'none'} size={18} />
               </button>
             </div>
             <div className="tag" style={{ backgroundColor: treino.tagColor || 'var(--secondary)', color: '#000' }}>{treino.tag}</div>
@@ -267,7 +267,7 @@ const Home = () => {
           <Typography.Body style={{ padding: '0 20px', opacity: 0.6 }}>Nenhuma dica postada ainda.</Typography.Body>
         ) : (
           artigos.map(artigo => (
-            <ArticleItem key={artigo.id}>
+            <ArticleItem key={artigo.id} onClick={() => navigate(`/artigo/${artigo.id}`)}>
               <div className="thumb" style={{ backgroundImage: `url(${artigo.image})` }} />
               <div style={{ flex: 1 }}>
                 <Typography.Small style={{ color: 'var(--primary)', fontWeight: '700' }}>{artigo.categoria}</Typography.Small>
@@ -276,9 +276,9 @@ const Home = () => {
               </div>
               <button
                 onClick={(e) => toggleFavorito(e, artigo, 'artigo')}
-                style={{ background: 'none', border: 'none', color: isFavorito(artigo.id) ? 'var(--primary)' : 'var(--muted)', alignSelf: 'center' }}
+                style={{ background: 'none', border: 'none', color: isFavorito(artigo.id) ? '#FF4B4B' : 'var(--muted)', alignSelf: 'center' }}
               >
-                <FiHeart fill={isFavorito(artigo.id) ? 'var(--primary)' : 'none'} size={20} />
+                <FiHeart fill={isFavorito(artigo.id) ? '#FF4B4B' : 'none'} size={20} />
               </button>
             </ArticleItem>
           ))
