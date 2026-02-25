@@ -70,11 +70,27 @@ const DetalhesTreino = () => {
 
     useEffect(() => {
         const fetchTreino = async () => {
-            // Primeiro busca nas sugestões estáticas
-            const sugerido = treinosSugeridos.find(t => t.id === id);
-            if (sugerido) {
-                // Tenta mapear os exercícios sugeridos com a biblioteca real
-                const exerciciosMapeados = sugerido.exercicios.map(exSugerido => {
+            let foundTreino = null;
+
+            // 1. Tenta buscar no Firestore de sugestões dinâmicas
+            try {
+                const sugRef = doc(db, 'treinos_sugeridos', id);
+                const sugSnap = await getDoc(sugRef);
+                if (sugSnap.exists()) {
+                    foundTreino = { ...sugSnap.data(), id: sugSnap.id };
+                }
+            } catch (e) {
+                console.error("Erro ao buscar sugestão dinâmica:", e);
+            }
+
+            // 2. Se não encontrou, tenta buscar nas sugestões estáticas (legado)
+            if (!foundTreino) {
+                foundTreino = treinosSugeridos.find(t => t.id === id);
+            }
+
+            if (foundTreino) {
+                // Mapeia os exercícios com a biblioteca real para garantir URLs de GIF atualizadas
+                const exerciciosMapeados = (foundTreino.exercicios || []).map(exSugerido => {
                     const exReal = biblioteca.find(e =>
                         e.nome?.toLowerCase().trim() === exSugerido.nome?.toLowerCase().trim()
                     );
@@ -85,26 +101,26 @@ const DetalhesTreino = () => {
                     };
                 });
 
-                setTreino({ ...sugerido, exercicios: exerciciosMapeados });
+                setTreino({ ...foundTreino, exercicios: exerciciosMapeados });
                 setLoading(false);
                 return;
             }
 
-            // Se não for sugestão, busca no Firestore
+            // 3. Se ainda não encontrou, busca nos treinos privados do usuário
             try {
                 const docRef = doc(db, `treinos/${usuario.uid}/lista`, id);
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
-                    setTreino(docSnap.data());
+                    setTreino({ ...docSnap.data(), id: docSnap.id });
                 }
             } catch (error) {
-                console.error("Erro ao buscar treino:", error);
+                console.error("Erro ao buscar treino privado:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        if (usuario && (biblioteca.length > 0 || !id.startsWith('sug-'))) {
+        if (usuario && (biblioteca.length > 0 || !id?.startsWith('sug-'))) {
             fetchTreino();
         }
     }, [id, usuario, biblioteca]);

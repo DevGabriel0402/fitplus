@@ -55,12 +55,24 @@ const NovaSugestao = () => {
     const [salvando, setSalvando] = useState(false);
 
     useEffect(() => {
-        if (id) {
+        const rascunhoStr = localStorage.getItem('suggestion_draft_data');
+        const rascunho = rascunhoStr ? JSON.parse(rascunhoStr) : null;
+
+        if (rascunho && rascunho.id === (id || null)) {
+            // Só carrega se o rascunho for para este treino específico (ou novo)
+            setForm(prev => ({ ...prev, ...rascunho }));
+        } else if (id) {
+            // Senão, se temos um ID, buscamos a versão oficial do banco
             getDoc(doc(db, 'treinos_sugeridos', id)).then(snap => {
                 if (snap.exists()) setForm({ ...snap.data(), exercicios: snap.data().exercicios.map((ex, i) => ({ ...ex, instanceId: `${ex.id}-${i}` })) });
             });
         }
     }, [id]);
+
+    const irParaBiblioteca = () => {
+        localStorage.setItem('suggestion_draft_data', JSON.stringify({ ...form, id: id || null }));
+        navigate('/biblioteca', { state: { fromAdmin: true } });
+    };
 
     const atualizarEx = (idx, field, val) => {
         const newExs = [...form.exercicios];
@@ -74,11 +86,19 @@ const NovaSugestao = () => {
         setForm({ ...form, exercicios: newExs });
     };
 
+    const cancelar = () => {
+        localStorage.removeItem('suggestion_draft_data');
+        navigate('/admin/sugestoes');
+    };
+
     const salvar = async () => {
         if (!form.nomeTreino || form.exercicios.length === 0) return toast.error("Preencha o nome e adicione exercícios.");
         setSalvando(true);
         try {
-            const data = { ...form, criadoEm: serverTimestamp() };
+            // Remove o ID do corpo do documento para não dar conflito no merge
+            const { id: _, ...rest } = form;
+            const data = { ...rest, criadoEm: serverTimestamp() };
+
             if (id) {
                 await updateDoc(doc(db, 'treinos_sugeridos', id), data);
                 toast.success("Atualizado!");
@@ -86,6 +106,7 @@ const NovaSugestao = () => {
                 await addDoc(collection(db, 'treinos_sugeridos'), data);
                 toast.success("Criado!");
             }
+            localStorage.removeItem('suggestion_draft_data');
             navigate('/admin/sugestoes');
         } catch (e) { toast.error("Erro ao salvar."); }
         finally { setSalvando(false); }
@@ -105,7 +126,7 @@ const NovaSugestao = () => {
         <AppShell>
             <Container>
                 <Flex $justify="space-between" style={{ marginTop: '20px', marginBottom: '20px' }}>
-                    <button onClick={() => navigate('/admin/sugestoes')}><FiArrowLeft size={24} /></button>
+                    <button onClick={cancelar}><FiArrowLeft size={24} /></button>
                     <Typography.H2 style={{ margin: 0 }}>{id ? 'Editar Sugestão' : 'Nova Sugestão'}</Typography.H2>
                     <button onClick={salvar} disabled={salvando} style={{ color: 'var(--primary)' }}><FiSave size={24} /></button>
                 </Flex>
@@ -148,7 +169,7 @@ const NovaSugestao = () => {
 
                 <Flex $justify="space-between" style={{ marginBottom: '15px' }}>
                     <Typography.H2 style={{ fontSize: '18px', margin: 0 }}>Exercícios</Typography.H2>
-                    <button onClick={() => navigate('/biblioteca', { state: { fromAdmin: true } })} style={{ color: 'var(--primary)', fontWeight: '700' }}><FiPlus /> Adicionar</button>
+                    <button onClick={irParaBiblioteca} style={{ color: 'var(--primary)', fontWeight: '700' }}><FiPlus /> Adicionar</button>
                 </Flex>
 
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -157,7 +178,8 @@ const NovaSugestao = () => {
                     </SortableContext>
                 </DndContext>
 
-                <BotaoPrimario onClick={salvar} disabled={salvando} style={{ marginTop: '20px', marginBottom: '40px' }}>{salvando ? 'Salvando...' : 'Salvar no Banco'}</BotaoPrimario>
+                <BotaoPrimario onClick={salvar} disabled={salvando} style={{ marginTop: '20px' }}>{salvando ? 'Salvando...' : 'Salvar no Banco'}</BotaoPrimario>
+                <button onClick={cancelar} style={{ width: '100%', marginTop: '15px', color: 'var(--muted)', fontWeight: '600', padding: '10px', marginBottom: '40px' }}>Cancelar</button>
             </Container>
         </AppShell>
     );

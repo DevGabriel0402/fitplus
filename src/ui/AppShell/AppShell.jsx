@@ -220,9 +220,7 @@ export const AppShell = ({ children, hideTabbar = false }) => {
 
   if (dadosUsuario?.role?.toLowerCase() === 'admin') {
     menuItems.push(
-      { to: "/admin/sugestoes", icon: <FiStar />, label: "Sugestões (Admin)" },
-      { to: "/admin/artigos", icon: <FiBookOpen />, label: "Artigos (Admin)" },
-      { to: "/admin", icon: <FiShield />, label: "Painel Geral" }
+      { to: "/admin", icon: <FiShield />, label: "Painel Administrativo" }
     );
   }
 

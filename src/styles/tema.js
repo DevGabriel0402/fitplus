@@ -3,7 +3,7 @@ export const tema = {
     bg: '#F8F9FE',
     surface: '#FFFFFF',
     card: '#FFFFFF',
-    primary: '#6C47FF',
+    primary: '#CB1313',
     secondary: '#8BC34A',
     text: '#1A1A1E',
     muted: 'rgba(0, 0, 0, 0.5)',

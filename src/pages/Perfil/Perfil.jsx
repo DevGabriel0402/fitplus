@@ -62,10 +62,13 @@ const StatItem = styled.div`
   padding: 15px;
   background-color: var(--card);
   border-radius: 12px;
+  padding: 12px;
+  background-color: var(--card);
+  border-radius: 12px;
   border: 1px solid var(--border);
 
-  .value { font-weight: 800; font-size: 18px; color: var(--primary); }
-  .label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .value { font-weight: 800; font-size: 16px; color: var(--primary); }
+  .label { font-size: 10px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
 `;
 
 const MenuList = styled.div`
@@ -106,7 +109,7 @@ const Perfil = () => {
                 <ProfileHeader>
                     <AvatarContainer>
                         <FiUser size={40} />
-                        <EditButton size={15} onClick={() => navigate('/perfil/editar')}><FiEdit2 /></EditButton>
+                        <EditButton onClick={() => navigate('/perfil/editar')}><FiEdit2 /></EditButton>
                     </AvatarContainer>
                     <Typography.H2>{dados?.nome || 'Atleta'}</Typography.H2>
                     <Typography.Small>{dados?.email}</Typography.Small>
@@ -114,15 +117,19 @@ const Perfil = () => {
                     <StatsGrid>
                         <StatItem>
                             <span className="value">{dados?.peso || '--'}</span>
-                            <span className="label">{dados?.unidadePeso || 'kg'}</span>
-                        </StatItem>
-                        <StatItem>
-                            <span className="value">{dados?.idade || '--'}</span>
-                            <span className="label">Anos</span>
+                            <span className="label">Peso ({dados?.unidadePeso || 'kg'})</span>
                         </StatItem>
                         <StatItem>
                             <span className="value">{dados?.altura || '--'}</span>
-                            <span className="label">{dados?.unidadeAltura || 'cm'}</span>
+                            <span className="label">Altura ({dados?.unidadeAltura || 'cm'})</span>
+                        </StatItem>
+                        <StatItem>
+                            <span className="value">{dados?.idade || '--'}</span>
+                            <span className="label">Idade (Anos)</span>
+                        </StatItem>
+                        <StatItem style={{ border: '1px solid var(--primary)' }}>
+                            <span className="value">{dados?.imc || '--'}</span>
+                            <span className="label">IMC ({dados?.statusImc || 'Calculando...'})</span>
                         </StatItem>
                     </StatsGrid>
                 </ProfileHeader>

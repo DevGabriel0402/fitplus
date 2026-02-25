@@ -59,7 +59,7 @@ const IconOption = styled.div`
 const Ajustes = () => {
     const { ajustes, atualizarAjustes, carregando } = useAjustes();
     const [config, setConfig] = useState({
-        corPrincipal: '#9b8cff',
+        corPrincipal: '#CB1313',
         nomePainel: 'FITBODY',
         iconePainel: 'FaDumbbell'
     });
@@ -116,26 +116,12 @@ const Ajustes = () => {
                 <Card style={{ marginBottom: '20px' }}>
                     <Typography.H2 style={{ fontSize: '18px', marginBottom: '20px' }}>Visual do Painel</Typography.H2>
 
-                    <InputWrapper>
-                        <Label>Nome do Painel</Label>
-                        <InputField
-                            value={config.nomePainel}
-                            onChange={(e) => setConfig({ ...config, nomePainel: e.target.value })}
-                            placeholder="Ex: Minha Academia"
-                        />
-                    </InputWrapper>
-
-                    <Label>Cor Principal</Label>
-                    <ColorGrid>
-                        {cores.map(cor => (
-                            <ColorOption
-                                key={cor}
-                                $color={cor}
-                                $active={config.corPrincipal === cor}
-                                onClick={() => setConfig({ ...config, corPrincipal: cor })}
-                            />
-                        ))}
-                    </ColorGrid>
+                    <Label>Nome do Painel</Label>
+                    <InputField
+                        value={config.nomePainel}
+                        onChange={(e) => setConfig({ ...config, nomePainel: e.target.value })}
+                        placeholder="Ex: Minha Academia"
+                    />
 
                     <Label style={{ marginTop: '30px', display: 'block' }}>Ícone do Painel</Label>
                     <IconGrid>

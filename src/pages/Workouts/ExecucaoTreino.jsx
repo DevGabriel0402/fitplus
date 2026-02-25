@@ -60,7 +60,7 @@ const ExecucaoTreino = () => {
                 const sugRef = doc(db, 'treinos_sugeridos', id);
                 const sugSnap = await getDoc(sugRef);
                 if (sugSnap.exists()) {
-                    foundTreino = { id: sugSnap.id, ...sugSnap.data() };
+                    foundTreino = { ...sugSnap.data(), id: sugSnap.id };
                 }
             } catch (e) { }
 
@@ -90,7 +90,7 @@ const ExecucaoTreino = () => {
                 const docRef = doc(db, `treinos/${usuario.uid}/lista`, id);
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
-                    setTreino(docSnap.data());
+                    setTreino({ ...docSnap.data(), id: docSnap.id });
                 }
             } catch (error) {
                 console.error("Erro ao carregar treino:", error);

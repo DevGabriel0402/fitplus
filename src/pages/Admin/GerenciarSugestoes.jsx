@@ -42,7 +42,7 @@ const GerenciarSugestoes = () => {
         try {
             const q = query(collection(db, 'treinos_sugeridos'), orderBy('criadoEm', 'desc'));
             const snap = await getDocs(q);
-            const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const data = snap.docs.map(doc => ({ ...doc.data(), id: doc.id }));
             setSugestoes(data);
         } catch (error) {
             console.error("Erro ao carregar sugestões:", error);

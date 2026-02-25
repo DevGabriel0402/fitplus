@@ -44,7 +44,7 @@ const GerenciarArtigos = () => {
         try {
             const q = query(collection(db, 'artigos'), orderBy('criadoEm', 'desc'));
             const snap = await getDocs(q);
-            const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const data = snap.docs.map(doc => ({ ...doc.data(), id: doc.id }));
             setArtigos(data);
         } catch (error) {
             console.error("Erro ao carregar artigos:", error);

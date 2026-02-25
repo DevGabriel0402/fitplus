@@ -12,6 +12,7 @@ import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/fi
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiEdit2 } from 'react-icons/fi';
+import { useAuth } from '../../contexts/AuthContexto';
 
 const SearchBar = styled.div`
   position: relative;
@@ -170,13 +171,14 @@ const Biblioteca = () => {
     dicas: ''
   });
   const [salvando, setSalvando] = useState(false);
+  const { dadosUsuario } = useAuth();
 
   const { documentos: exercicios, carregando } = useColecao('exercicios');
   const navigate = useNavigate();
   const location = useLocation();
   const isSelectionMode = location.state?.fromCreate || location.state?.pickingForWorkout || location.state?.fromAdmin;
 
-  const categorias = ['Todos', 'Bíceps', 'Tríceps', 'Peito', 'Costas', 'Ombros', 'Quadríceps', 'Panturrilha', 'Abdômen', 'Alongamento', 'Sem Equipamento'];
+  const categorias = ['Todos', 'Pernas', 'Bíceps', 'Tríceps', 'Peito', 'Costas', 'Ombros', 'Quadríceps', 'Panturrilha', 'Abdômen', 'Alongamento', 'Sem Equipamento'];
   const categoriasSimplificadas = categorias.filter(c => c !== 'Todos').map(c => ({ label: c, value: c }));
 
   const toggleSelecao = (ex) => {
@@ -288,12 +290,14 @@ const Biblioteca = () => {
       <Container style={{ paddingBottom: isSelectionMode ? '100px' : '20px' }}>
         <Flex $justify="space-between" style={{ marginTop: '20px' }}>
           <Typography.H1 style={{ margin: 0 }}>Biblioteca</Typography.H1>
-          <button
-            onClick={abrirModalCadastro}
-            style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: '700' }}
-          >
-            <FiPlus /> CADASTRAR
-          </button>
+          {dadosUsuario?.role?.toLowerCase() === 'admin' && (
+            <button
+              onClick={abrirModalCadastro}
+              style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: '700' }}
+            >
+              <FiPlus /> CADASTRAR
+            </button>
+          )}
         </Flex>
 
         <SearchBar>
@@ -344,12 +348,14 @@ const Biblioteca = () => {
                     <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid var(--border)' }} />
                   )
                 ) : (
-                  <Flex $gap="15px">
-                    <button onClick={(e) => abrirModalEdicao(ex, e)} style={{ padding: '8px', color: 'var(--primary)' }}>
-                      <FiEdit2 size={18} />
-                    </button>
-                    <FiChevronRight color="var(--muted)" />
-                  </Flex>
+                  !isSelectionMode && dadosUsuario?.role?.toLowerCase() === 'admin' && (
+                    <Flex $gap="10px">
+                      <button onClick={(e) => { e.stopPropagation(); abrirModalEdicao(ex, e); }} style={{ color: 'var(--muted)' }}>
+                        <FiEdit2 size={18} />
+                      </button>
+                      <FiChevronRight color="var(--muted)" />
+                    </Flex>
+                  )
                 )}
               </ExerciseCard>
             );

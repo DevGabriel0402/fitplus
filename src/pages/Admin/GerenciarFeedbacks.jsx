@@ -30,7 +30,8 @@ const GerenciarFeedbacks = () => {
         try {
             const q = query(collection(db, 'feedbacks'), orderBy('data', 'desc'));
             const snap = await getDocs(q);
-            setFeedbacks(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            const items = snap.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+            setFeedbacks(items);
         } catch (error) {
             console.error("Erro ao carregar feedbacks:", error);
             toast.error("Erro ao carregar feedbacks.");

@@ -59,7 +59,7 @@ const GerenciarUsuarios = () => {
         try {
             const q = query(collection(db, 'usuarios'), orderBy('nome', 'asc'));
             const snap = await getDocs(q);
-            const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const data = snap.docs.map(doc => ({ ...doc.data(), id: doc.id }));
             setUsuarios(data);
         } catch (error) {
             console.error("Erro ao carregar usuários:", error);
