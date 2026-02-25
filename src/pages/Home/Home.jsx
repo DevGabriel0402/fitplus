@@ -14,7 +14,6 @@ import toast from 'react-hot-toast';
 
 import { db } from '../../firebase/firestore';
 import { useColecao } from '../../hooks/useColecao';
-import { treinosSugeridos as estaticos } from '../../data/sugestoes';
 
 const ShortcutGrid = styled.div`
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 0 20px; margin-bottom: 30px; margin-top: 20px;   
@@ -89,7 +88,7 @@ const Home = () => {
         const qSug = query(collection(db, 'treinos_sugeridos'), orderBy('criadoEm', 'desc'), limit(10));
         const snapSug = await getDocs(qSug);
         const dynamicSug = snapSug.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setSugeridos(dynamicSug.length > 0 ? dynamicSug : estaticos);
+        setSugeridos(dynamicSug);
 
         // Artigos
         const qArt = query(collection(db, 'artigos'), orderBy('criadoEm', 'desc'), limit(10));

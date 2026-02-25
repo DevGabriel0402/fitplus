@@ -61,16 +61,10 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Feedbacks de Treino: Alunos criam (se ativos), Admins leem/deletam tudo
+    // Feedbacks de Treino: Alunos ativos criam, Admins gerenciam
     match /feedbacks/{docId} {
       allow read, delete: if isAdmin();
       allow create: if isAuth() && isActive(); 
-    }
-
-    // Feedbacks de Treino: Alunos criam, Admins leem tudo
-    match /feedbacks/{docId} {
-      allow read, delete: if isAuth() && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.role.lower() == 'admin';
-      allow create: if isAuth(); 
     }
 
     // Bloqueio padrão para qualquer outra coleção

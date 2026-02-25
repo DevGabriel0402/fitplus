@@ -265,12 +265,7 @@ const Biblioteca = () => {
     }
   };
 
-  const exerciciosExemplo = [
-    { id: '1', nome: 'Supino Reto', categoria: 'Peito', alvo: 'Peitoral Maior', gifUrl: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3RwZ3B0Z3B0Z3B0Z3B0Z3B0Z3B0Z3B0Z3B0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMG7X3f9yJvHVe/giphy.gif' },
-    { id: '2', nome: 'Agachamento', categoria: 'Quadríceps', alvo: 'Quadríceps', gifUrl: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3RwZ3B0Z3B0Z3B0Z3B0Z3B0Z3B0Z3B0Z3B0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMG7X3f9yJvHVe/giphy.gif' },
-  ];
-
-  const listaExibicao = exercicios.length > 0 ? exercicios : exerciciosExemplo;
+  const listaExibicao = exercicios;
 
   const normalizeStr = (str) =>
     str?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "") || '';
