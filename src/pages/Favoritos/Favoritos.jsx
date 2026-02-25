@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { FiSearch, FiStar, FiFilter } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { FiStar } from 'react-icons/fi';
 import { AppShell } from '../../ui/AppShell/AppShell';
-import { Container, Typography, Card, Flex, InputField } from '../../ui/components/BaseUI';
+import { Container, Typography, Card } from '../../ui/components/BaseUI';
 import { useAuth } from '../../contexts/AuthContexto';
 import { useColecao } from '../../hooks/useColecao';
 
@@ -53,27 +54,27 @@ const StarIcon = styled.div`
 `;
 
 const Favoritos = () => {
-    const [tabAtiva, setTabAtiva] = useState('All');
+    const [tabAtiva, setTabAtiva] = useState('Todos');
     const { usuario } = useAuth();
     const { documentos: favoritos, carregando } = useColecao(`favoritos/${usuario?.uid}/itens`);
+    const navigate = useNavigate();
 
-    const tabs = ['All', 'Video', 'Article'];
+    const tabs = ['Todos', 'Treinos', 'Artigos'];
 
-    // Mock data para o MVP
-    const favoritosExemplo = [
-        { id: '1', tipo: 'Video', titulo: 'Full Body HIIT', duration: '20 min', kcal: '300 kcal', thumb: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=300' },
-        { id: '2', tipo: 'Article', titulo: 'Dieta Flexível: O Guia', duration: '5 min read', kcal: '', thumb: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=300' },
-    ];
-
-    const listaExibicao = favoritos.length > 0 ? favoritos : favoritosExemplo;
-    const listaFiltrada = listaExibicao.filter(f => tabAtiva === 'All' || f.tipo === tabAtiva);
+    const listaFiltrada = favoritos.filter(f => {
+        if (tabAtiva === 'Todos') return true;
+        if (tabAtiva === 'Treinos') return f.tipo === 'treino';
+        if (tabAtiva === 'Artigos') return f.tipo === 'artigo';
+        return true;
+    });
 
     return (
-        <AppShell>
+        <AppShell style={{ paddingBottom: '80px' }}>
             <Container>
                 <Typography.H1 style={{ marginTop: '20px' }}>Meus Favoritos</Typography.H1>
+                <Typography.Body style={{ opacity: 0.7, marginBottom: '20px' }}>Sua coleção pessoal de conteúdos</Typography.Body>
 
-                <TabsWrapper style={{ marginTop: '20px' }}>
+                <TabsWrapper>
                     {tabs.map(tab => (
                         <Tab
                             key={tab}
@@ -86,26 +87,29 @@ const Favoritos = () => {
                 </TabsWrapper>
 
 
-                {carregando && favoritos.length === 0 ? (
+                {carregando ? (
                     <Typography.Body>Carregando favoritos...</Typography.Body>
+                ) : listaFiltrada.length === 0 ? (
+                    <div style={{ textAlign: 'center', marginTop: '50px', padding: '20px' }}>
+                        <FiStar size={40} color="var(--border)" style={{ marginBottom: '15px' }} />
+                        <Typography.Body style={{ opacity: 0.6 }}>Nenhum favorito encontrado em <b>{tabAtiva}</b>.</Typography.Body>
+                    </div>
                 ) : (
                     listaFiltrada.map(fav => (
-                        <FavoriteCard key={fav.id}>
-                            <Thumbnail style={{ backgroundImage: `url(${fav.thumb || fav.thumbnailUrl})` }} />
+                        <FavoriteCard key={fav.id} onClick={() => navigate(fav.path)}>
+                            <Thumbnail style={{ backgroundImage: `url(${fav.image || fav.thumb})` }} />
                             <div style={{ flex: 1, paddingTop: '5px' }}>
-                                <Typography.Small style={{ color: 'var(--primary)' }}>{fav.tipo.toUpperCase()}</Typography.Small>
+                                <Typography.Small style={{ color: fav.tipo === 'artigo' ? 'var(--primary)' : 'var(--secondary)', fontWeight: '800' }}>
+                                    {fav.tipo.toUpperCase()}
+                                </Typography.Small>
                                 <h4 style={{ fontSize: '16px', margin: '4px 0' }}>{fav.titulo}</h4>
-                                <Typography.Small>{fav.duration} {fav.kcal && `• ${fav.kcal}`}</Typography.Small>
+                                <Typography.Small style={{ opacity: 0.7 }}>
+                                    {fav.subtitulo || fav.categoria} {fav.duracao && `• ${fav.duracao}`}
+                                </Typography.Small>
                             </div>
                             <StarIcon><FiStar fill="var(--primary)" /></StarIcon>
                         </FavoriteCard>
                     ))
-                )}
-
-                {listaFiltrada.length === 0 && (
-                    <div style={{ textAlign: 'center', marginTop: '50px' }}>
-                        <Typography.Body>Nenhum favorito nesta categoria.</Typography.Body>
-                    </div>
                 )}
             </Container>
         </AppShell>

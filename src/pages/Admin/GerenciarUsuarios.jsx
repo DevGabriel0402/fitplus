@@ -7,6 +7,7 @@ import { Container, Typography, Card, Flex } from '../../ui/components/BaseUI';
 import { db } from '../../firebase/firestore';
 import { collection, query, getDocs, orderBy, doc, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
+import { maskTelefone } from '../../utils/masks';
 
 const UserCard = styled(Card)`
   display: flex;
@@ -137,7 +138,7 @@ const GerenciarUsuarios = () => {
                             <Flex $justify="space-between" $align="center" style={{ flexWrap: 'wrap', gap: '15px' }}>
                                 <Flex $gap="20px">
                                     <Typography.Small style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                        <FiPhone size={14} /> {user.telefone || '--'}
+                                        <FiPhone size={14} /> {maskTelefone(user.telefone) || '--'}
                                     </Typography.Small>
                                     <Typography.Small>
                                         <strong>Peso:</strong> {user.peso}{user.unidadePeso}

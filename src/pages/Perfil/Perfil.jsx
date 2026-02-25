@@ -156,7 +156,10 @@ const Perfil = () => {
                         <FiChevronRight color="var(--muted)" />
                     </MenuItem>
 
-                    <MenuItem>
+                    <MenuItem onClick={() => {
+                        const message = encodeURIComponent("Olá! Gostaria de fazer uma reclamação ou sugestão sobre o PersonalPlus.");
+                        window.open(`https://wa.me/5531991660594?text=${message}`, '_blank');
+                    }}>
                         <div className="main"><FiHelpCircle /> Ajuda</div>
                         <FiChevronRight color="var(--muted)" />
                     </MenuItem>

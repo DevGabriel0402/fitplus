@@ -17,6 +17,7 @@ import {
     Flex
 } from '../../ui/components/BaseUI';
 import CustomSelect from '../../ui/components/CustomSelect';
+import { maskTelefone } from '../../utils/masks';
 
 
 const SetupContainer = styled(Container)`
@@ -271,7 +272,7 @@ const SetupWizard = () => {
                                     type="tel"
                                     placeholder="(00) 00000-0000"
                                     value={dados.telefone}
-                                    onChange={(e) => setDados({ ...dados, telefone: e.target.value })}
+                                    onChange={(e) => setDados({ ...dados, telefone: maskTelefone(e.target.value) })}
                                 />
                             </InputWrapper>
                         </div>

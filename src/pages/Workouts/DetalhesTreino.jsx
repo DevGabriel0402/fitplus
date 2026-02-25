@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiPlay, FiClock, FiActivity } from 'react-icons/fi';
+import { FiArrowLeft, FiPlay, FiClock, FiActivity, FiStar } from 'react-icons/fi';
 import { AppShell } from '../../ui/AppShell/AppShell';
 import { Container, Typography, Card, Flex, BotaoPrimario } from '../../ui/components/BaseUI';
 import { treinosSugeridos } from '../../data/sugestoes';
 import { db } from '../../firebase/firestore';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContexto';
+import toast from 'react-hot-toast';
 
 const DetailsHeader = styled.div`
   width: 100%;
@@ -65,6 +66,7 @@ const DetalhesTreino = () => {
     const [treino, setTreino] = useState(null);
     const [loading, setLoading] = useState(true);
     const { documentos: biblioteca } = useColecao('exercicios');
+    const { documentos: listaFavs } = useColecao(`favoritos/${usuario?.uid}/itens`);
 
     useEffect(() => {
         const fetchTreino = async () => {
@@ -123,6 +125,31 @@ const DetalhesTreino = () => {
                     style={{ position: 'absolute', top: '30px', left: '20px', zIndex: 10, color: 'white', backgroundColor: 'rgba(0,0,0,0.3)', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
                     <FiArrowLeft size={24} />
+                </button>
+
+                <button
+                    onClick={async () => {
+                        const docRef = doc(db, `favoritos/${usuario.uid}/itens`, id);
+                        if (listaFavs.some(f => f.id === id)) {
+                            await deleteDoc(docRef);
+                            toast.success('Removido dos favoritos');
+                        } else {
+                            await setDoc(docRef, {
+                                id, tipo: 'treino', titulo: treino.nomeTreino, image: treino.image,
+                                path: `/detalhes-treino/${id}`, subtitulo: `${treino.nivel} • ${treino.duracao}`,
+                                favoritadoEm: new Date().toISOString()
+                            });
+                            toast.success('Favoritado!');
+                        }
+                    }}
+                    style={{
+                        position: 'absolute', top: '30px', right: '20px', zIndex: 10,
+                        color: listaFavs.some(f => f.id === id) ? 'var(--primary)' : 'white',
+                        backgroundColor: 'rgba(0,0,0,0.3)', width: '40px', height: '40px', borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}
+                >
+                    <FiStar size={24} fill={listaFavs.some(f => f.id === id) ? 'var(--primary)' : 'none'} />
                 </button>
             </DetailsHeader>
 

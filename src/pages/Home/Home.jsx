@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FiActivity, FiUser, FiPlus, FiBookOpen } from 'react-icons/fi';
+import { FiActivity, FiUser, FiPlus, FiBookOpen, FiHeart, FiStar } from 'react-icons/fi';
 import * as IconsFa from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAjustes } from '../../contexts/AjustesContexto';
 import { AppShell } from '../../ui/AppShell/AppShell';
 import { useUsuario } from '../../hooks/useUsuario';
+import { useAuth } from '../../contexts/AuthContexto';
 import { Container, Typography, Card, Flex } from '../../ui/components/BaseUI';
 import ResumeWorkoutModal from '../../ui/components/ResumeWorkoutModal';
-import { collection, query, getDocs, orderBy, limit } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy, limit, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import toast from 'react-hot-toast';
 
 import { db } from '../../firebase/firestore';
+import { useColecao } from '../../hooks/useColecao';
 import { treinosSugeridos as estaticos } from '../../data/sugestoes';
 
 const ShortcutGrid = styled.div`
@@ -44,11 +47,40 @@ const ArticleItem = styled(Card)`
 
 const Home = () => {
   const { dados, carregando: userLoading } = useUsuario();
+  const { usuario } = useAuth();
   const navigate = useNavigate();
   const { ajustes } = useAjustes();
   const [sugeridos, setSugeridos] = useState([]);
   const [artigos, setArtigos] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Sincroniza favoritos para saber o que já está marcado
+  const { documentos: listaFavs } = useColecao(usuario ? `favoritos/${usuario.uid}/itens` : null);
+  const isFavorito = (id) => listaFavs.some(f => f.id === id);
+
+  const toggleFavorito = async (e, item, tipo) => {
+    e.stopPropagation();
+    if (!usuario) return;
+
+    const docRef = doc(db, `favoritos/${usuario.uid}/itens`, item.id);
+
+    if (isFavorito(item.id)) {
+      await deleteDoc(docRef);
+      toast.success('Removido dos favoritos');
+    } else {
+      const data = {
+        id: item.id,
+        tipo: tipo,
+        titulo: item.nomeTreino || item.titulo,
+        image: item.image,
+        path: tipo === 'treino' ? `/detalhes-treino/${item.id}` : `/home`, // Artigo ainda não tem rota de detalhes
+        subtitulo: tipo === 'treino' ? `${item.nivel} • ${item.duracao}` : item.categoria,
+        favoritadoEm: new Date().toISOString()
+      };
+      await setDoc(docRef, data);
+      toast.success('Adicionado aos favoritos!');
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -107,7 +139,18 @@ const Home = () => {
       <ScrollGrid>
         {sugeridos.map(treino => (
           <ActionCard key={treino.id} onClick={() => navigate(`/detalhes-treino/${treino.id}`)}>
-            <div className="image" style={{ backgroundImage: `url(${treino.image})` }} />
+            <div className="image" style={{ backgroundImage: `url(${treino.image})` }}>
+              <button
+                onClick={(e) => toggleFavorito(e, treino, 'treino')}
+                style={{
+                  position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.4)',
+                  border: 'none', borderRadius: '50%', width: 32, height: 32,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: isFavorito(treino.id) ? 'var(--primary)' : 'white'
+                }}
+              >
+                <FiStar fill={isFavorito(treino.id) ? 'var(--primary)' : 'none'} size={18} />
+              </button>
+            </div>
             <div className="tag" style={{ backgroundColor: treino.tagColor || 'var(--secondary)', color: '#000' }}>{treino.tag}</div>
             <div className="content">
               <Typography.Small>{treino.nivel} • {treino.duracao}</Typography.Small>
@@ -134,6 +177,12 @@ const Home = () => {
                 <h4 style={{ margin: '5px 0', fontSize: '16px' }}>{artigo.titulo}</h4>
                 <Typography.Small>{artigo.tempoLeitura}</Typography.Small>
               </div>
+              <button
+                onClick={(e) => toggleFavorito(e, artigo, 'artigo')}
+                style={{ background: 'none', border: 'none', color: isFavorito(artigo.id) ? 'var(--primary)' : 'var(--muted)', alignSelf: 'center' }}
+              >
+                <FiHeart fill={isFavorito(artigo.id) ? 'var(--primary)' : 'none'} size={20} />
+              </button>
             </ArticleItem>
           ))
         )}

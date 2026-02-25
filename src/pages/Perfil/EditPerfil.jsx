@@ -9,6 +9,7 @@ import { Container, Typography, InputWrapper, Label, InputField, BotaoPrimario, 
 import { useUsuario } from '../../hooks/useUsuario';
 import { db } from '../../firebase/firestore';
 import { useAuth } from '../../contexts/AuthContexto';
+import { maskTelefone } from '../../utils/masks';
 
 const EditPerfil = () => {
     const { usuario } = useAuth();
@@ -88,7 +89,7 @@ const EditPerfil = () => {
                         <Label>Telefone</Label>
                         <InputField
                             value={formData.telefone}
-                            onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                            onChange={(e) => setFormData({ ...formData, telefone: maskTelefone(e.target.value) })}
                             placeholder="(00) 00000-0000"
                         />
                     </InputWrapper>
