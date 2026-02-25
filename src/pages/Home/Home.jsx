@@ -7,7 +7,9 @@ import { useAjustes } from '../../contexts/AjustesContexto';
 import { AppShell } from '../../ui/AppShell/AppShell';
 import { useUsuario } from '../../hooks/useUsuario';
 import { Container, Typography, Card, Flex } from '../../ui/components/BaseUI';
+import ResumeWorkoutModal from '../../ui/components/ResumeWorkoutModal';
 import { collection, query, getDocs, orderBy, limit } from 'firebase/firestore';
+
 import { db } from '../../firebase/firestore';
 import { treinosSugeridos as estaticos } from '../../data/sugestoes';
 
@@ -76,7 +78,9 @@ const Home = () => {
 
   return (
     <AppShell>
+      <ResumeWorkoutModal />
       <ShortcutGrid>
+
         <ShortcutItem onClick={() => navigate('/workouts/novo')}>
           <div className="icon"><FiPlus /></div>
           <span>Criar</span>

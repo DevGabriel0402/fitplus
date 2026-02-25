@@ -1,7 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
 import { NavLink, useNavigate, Link } from 'react-router-dom';
-import { FiHome, FiActivity, FiStar, FiBell, FiUser, FiSearch, FiLogOut, FiBookOpen } from 'react-icons/fi';
+import { FiHome, FiActivity, FiStar, FiBell, FiUser, FiSearch, FiLogOut, FiBookOpen, FiShield } from 'react-icons/fi';
+
 import * as IconsFa from 'react-icons/fa';
 const { FaDumbbell } = IconsFa;
 import { deslogar } from '../../firebase/auth';
@@ -198,7 +199,7 @@ const TabItem = styled(NavLink)`
 
 export const AppShell = ({ children, hideTabbar = false }) => {
   const { ajustes } = useAjustes();
-  const { usuario } = useAuth();
+  const { usuario, dadosUsuario } = useAuth();
   const navigate = useNavigate();
   const SelectedIcon = (ajustes?.iconePainel && IconsFa[ajustes.iconePainel]) || IconsFa.FaDumbbell;
 
@@ -215,9 +216,13 @@ export const AppShell = ({ children, hideTabbar = false }) => {
     { to: "/home", icon: <FiHome />, label: "Home" },
     { to: "/workouts", icon: <FiActivity />, label: "Treinos" },
     { to: "/perfil", icon: <FiUser />, label: "Perfil" },
-    { to: "/admin/sugestoes", icon: <FiStar />, label: "Sugestões (Admin)" },
-    { to: "/admin/artigos", icon: <FiBookOpen />, label: "Artigos (Admin)" },
   ];
+
+  if (dadosUsuario?.role?.toLowerCase() === 'admin') {
+    menuItems.push({ to: "/admin", icon: <FiShield />, label: "Admin" });
+  }
+
+
 
 
   return (

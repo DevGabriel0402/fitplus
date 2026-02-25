@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft, FiClock } from 'react-icons/fi';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { AppShell } from '../../ui/AppShell/AppShell';
 import { Container, Typography, Card, Flex, BotaoPrimario } from '../../ui/components/BaseUI';
@@ -40,7 +40,7 @@ const SetBadge = styled.button`
 `;
 
 const ExecucaoTreino = () => {
-    const { usuario } = useAuth();
+    const { usuario, dadosUsuario } = useAuth();
     const { id } = useParams();
     const navigate = useNavigate();
     const [treino, setTreino] = useState(null);
@@ -139,6 +139,12 @@ const ExecucaoTreino = () => {
         if (treino && !loading && inicioTimestamp) {
             const session = { index: indexExercicio, sets: setsCompletos, startTime: inicioTimestamp };
             localStorage.setItem(`workout_session_${id}_${usuario.uid}`, JSON.stringify(session));
+
+            // Chave global para detecção de retomada
+            localStorage.setItem(`active_workout_${usuario.uid}`, JSON.stringify({
+                id,
+                nome: treino.nomeTreino
+            }));
         }
     }, [indexExercicio, setsCompletos, inicioTimestamp, id, usuario, treino, loading]);
 
@@ -153,9 +159,26 @@ const ExecucaoTreino = () => {
         setSetsCompletos(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
     };
 
+    const [showFeedback, setShowFeedback] = useState(false);
+    const [rating, setRating] = useState(5);
+    const [comentario, setComentario] = useState('');
+    const [enviandoFeedback, setEnviandoFeedback] = useState(false);
+
     const finalizarTreino = async () => {
         if (!treino || !treino.exercicios) return;
+
+        // Se for admin, finaliza sem feedback (opcional)
+        if (dadosUsuario?.role?.toLowerCase() === 'admin') {
+            await salvarTreinoNoHistorico();
+            return;
+        }
+
+        setShowFeedback(true);
+    };
+
+    const salvarTreinoNoHistorico = async (feedbackData = null) => {
         try {
+            // 1. Salvar no histórico
             await addDoc(collection(db, `treinos_historico/${usuario.uid}/lista`), {
                 treinoId: id,
                 nomeTreino: treino.nomeTreino,
@@ -169,12 +192,34 @@ const ExecucaoTreino = () => {
                     setsFeitos: setsCompletos.filter(s => s.startsWith(`${idx}-`)).length
                 }))
             });
+
+            // 2. Salvar feedback se houver
+            if (feedbackData) {
+                await addDoc(collection(db, 'feedbacks'), {
+                    ...feedbackData,
+                    usuarioId: usuario.uid,
+                    usuarioNome: dadosUsuario?.nome || 'Aluno',
+                    treinoId: id,
+                    treinoNome: treino.nomeTreino,
+                    data: new Date().toISOString()
+                });
+            }
+
             localStorage.removeItem(`workout_session_${id}_${usuario.uid}`);
+            localStorage.removeItem(`active_workout_${usuario.uid}`);
             toast.success('Treino finalizado!');
             navigate('/progresso');
         } catch (error) {
-            toast.error("Erro ao salvar.");
+            console.error("Erro ao finalizar:", error);
+            toast.error("Erro ao salvar treino.");
         }
+    };
+
+    const handleEnviarFeedback = async () => {
+        setEnviandoFeedback(true);
+        await salvarTreinoNoHistorico({ nota: rating, comentario });
+        setEnviandoFeedback(false);
+        setShowFeedback(false);
     };
 
     if (loading) return <Container><Typography.Body>Carregando...</Typography.Body></Container>;
@@ -230,9 +275,59 @@ const ExecucaoTreino = () => {
                         {indexExercicio === treino.exercicios.length - 1 ? 'Finalizar' : 'Próximo'}
                     </BotaoPrimario>
                 </Flex>
+
+                <AnimatePresence>
+                    {showFeedback && (
+                        <ModalOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                            <ModalContent initial={{ y: 50 }} animate={{ y: 0 }} exit={{ y: 50 }}>
+                                <Typography.H2>Treino Concluído! 🎉</Typography.H2>
+                                <Typography.Body style={{ marginBottom: '20px' }}>Como foi o treino de hoje?</Typography.Body>
+
+                                <Flex $justify="center" $gap="10px" style={{ marginBottom: '20px' }}>
+                                    {[1, 2, 3, 4, 5].map(num => (
+                                        <Star key={num} $active={num <= rating} onClick={() => setRating(num)}>★</Star>
+                                    ))}
+                                </Flex>
+
+                                <textarea
+                                    placeholder="Deixe um comentário para o instrutor..."
+                                    value={comentario}
+                                    onChange={(e) => setComentario(e.target.value)}
+                                    style={{
+                                        width: '100%', height: '100px', borderRadius: '12px',
+                                        background: 'var(--surface)', border: '1px solid var(--border)',
+                                        color: 'var(--text)', padding: '12px', marginBottom: '20px',
+                                        fontFamily: 'inherit', resize: 'none'
+                                    }}
+                                />
+
+                                <BotaoPrimario onClick={handleEnviarFeedback} disabled={enviandoFeedback} style={{ width: '100%' }}>
+                                    {enviandoFeedback ? 'Enviando...' : 'Enviar Feedback'}
+                                </BotaoPrimario>
+                            </ModalContent>
+                        </ModalOverlay>
+                    )}
+                </AnimatePresence>
             </Container>
         </AppShell>
     );
 };
+
+const ModalOverlay = styled(motion.div)`
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.8); z-index: 3000;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+`;
+
+const ModalContent = styled(motion.create(Card))`
+  width: 100%; max-width: 400px; padding: 30px; text-align: center;
+`;
+
+const Star = styled.span`
+  font-size: 32px; cursor: pointer;
+  color: ${props => props.$active ? 'var(--primary)' : 'var(--border)'};
+  transition: transform 0.1s;
+  &:hover { transform: scale(1.2); }
+`;
 
 export default ExecucaoTreino;

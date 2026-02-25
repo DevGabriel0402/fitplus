@@ -89,6 +89,7 @@ const MenuItem = styled.div`
 
 const Perfil = () => {
     const { dados, carregando } = useUsuario();
+    const { usuario, dadosUsuario } = useAuth();
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -134,10 +135,21 @@ const Perfil = () => {
                         <div className="main"><FiHeart /> Favoritos</div>
                         <FiChevronRight color="var(--muted)" />
                     </MenuItem>
+
+                    {dadosUsuario?.role?.toLowerCase() === 'admin' && (
+                        <MenuItem onClick={() => navigate('/admin')}>
+                            <div className="main"><FiShield /> Painel Administrativo</div>
+                            <FiChevronRight color="var(--muted)" />
+                        </MenuItem>
+                    )}
+
+
                     <MenuItem>
                         <div className="main"><FiShield /> Privacidade</div>
                         <FiChevronRight color="var(--muted)" />
                     </MenuItem>
+
+
                     <MenuItem onClick={() => navigate('/perfil/ajustes')}>
                         <div className="main"><FiSettings /> Ajustes</div>
                         <FiChevronRight color="var(--muted)" />

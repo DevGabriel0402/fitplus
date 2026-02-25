@@ -28,6 +28,9 @@ import GerenciarSugestoes from '../pages/Admin/GerenciarSugestoes';
 import NovaSugestao from '../pages/Admin/NovaSugestao';
 import GerenciarArtigos from '../pages/Admin/GerenciarArtigos';
 import NovoArtigo from '../pages/Admin/NovoArtigo';
+import DashboardAdmin from '../pages/Admin/DashboardAdmin';
+import GerenciarUsuarios from '../pages/Admin/GerenciarUsuarios';
+import GerenciarFeedbacks from '../pages/Admin/GerenciarFeedbacks';
 
 
 
@@ -36,11 +39,25 @@ import NovoArtigo from '../pages/Admin/NovoArtigo';
 
 
 
-const RotaPrivada = ({ children, precisaSetup = true }) => {
-    const { usuario, perfilCompelto } = useAuth();
+
+
+const RotaPrivada = ({ children, precisaSetup = true, apenasAdmin = false }) => {
+    const { usuario, perfilCompelto, dadosUsuario } = useAuth();
 
     if (!usuario) return <Navigate to="/login" />;
+
+    // Verificação de Conta Ativa
+    if (dadosUsuario?.ativo === false) {
+        return <Navigate to="/login" />;
+    }
+
     if (precisaSetup && !perfilCompelto) return <Navigate to="/setup" />;
+
+    // Verificação de Admin
+    if (apenasAdmin && dadosUsuario?.role?.toLowerCase() !== 'admin') {
+        return <Navigate to="/home" />;
+    }
+
 
     return children;
 };
@@ -148,41 +165,67 @@ export const Rotas = () => {
                 </RotaPrivada>
             } />
 
+            <Route path="/admin" element={
+                <RotaPrivada apenasAdmin={true}>
+                    <DashboardAdmin />
+                </RotaPrivada>
+            } />
+
+            <Route path="/admin/usuarios" element={
+                <RotaPrivada apenasAdmin={true}>
+                    <GerenciarUsuarios />
+                </RotaPrivada>
+            } />
+
+            <Route path="/admin/feedbacks" element={
+                <RotaPrivada apenasAdmin={true}>
+                    <GerenciarFeedbacks />
+                </RotaPrivada>
+            } />
+
+
             <Route path="/admin/sugestoes" element={
-                <RotaPrivada>
+                <RotaPrivada apenasAdmin={true}>
                     <GerenciarSugestoes />
                 </RotaPrivada>
             } />
 
+
+
             <Route path="/admin/sugestoes/nova" element={
-                <RotaPrivada>
+                <RotaPrivada apenasAdmin={true}>
                     <NovaSugestao />
                 </RotaPrivada>
             } />
+
 
             <Route path="/admin/sugestoes/editar/:id" element={
-                <RotaPrivada>
+                <RotaPrivada apenasAdmin={true}>
                     <NovaSugestao />
                 </RotaPrivada>
             } />
 
+
             <Route path="/admin/artigos" element={
-                <RotaPrivada>
+                <RotaPrivada apenasAdmin={true}>
                     <GerenciarArtigos />
                 </RotaPrivada>
             } />
 
+
             <Route path="/admin/artigos/novo" element={
-                <RotaPrivada>
+                <RotaPrivada apenasAdmin={true}>
                     <NovoArtigo />
                 </RotaPrivada>
             } />
 
+
             <Route path="/admin/artigos/editar/:id" element={
-                <RotaPrivada>
+                <RotaPrivada apenasAdmin={true}>
                     <NovoArtigo />
                 </RotaPrivada>
             } />
+
 
             {/* 404 / Default */}
             <Route path="*" element={<Navigate to="/" />} />

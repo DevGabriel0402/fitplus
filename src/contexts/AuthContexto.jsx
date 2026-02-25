@@ -10,8 +10,10 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [usuario, setUsuario] = useState(null);
+  const [dadosUsuario, setDadosUsuario] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [perfilCompelto, setPerfilCompleto] = useState(false);
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -22,18 +24,24 @@ export const AuthProvider = ({ children }) => {
         try {
           const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
           if (userDoc.exists()) {
-            setPerfilCompleto(userDoc.data().setupCompleto || false);
+            const data = userDoc.data();
+            setDadosUsuario(data);
+            setPerfilCompleto(data.setupCompleto || false);
           } else {
+            setDadosUsuario(null);
             setPerfilCompleto(false);
           }
+
         } catch (error) {
           console.error("Erro ao carregar perfil:", error);
           setPerfilCompleto(false);
         }
       } else {
         setUsuario(null);
+        setDadosUsuario(null);
         setPerfilCompleto(false);
       }
+
       setCarregando(false);
     });
 
@@ -42,9 +50,11 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     usuario,
+    dadosUsuario,
     carregando,
     perfilCompelto,
     setPerfilCompleto
+
   };
 
   return (
