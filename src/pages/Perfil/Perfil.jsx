@@ -5,6 +5,7 @@ import { FiUser, FiHeart, FiShield, FiSettings, FiHelpCircle, FiLogOut, FiChevro
 import { AppShell } from '../../ui/AppShell/AppShell';
 import { Container, Typography, Card, Flex } from '../../ui/components/BaseUI';
 import { useUsuario } from '../../hooks/useUsuario';
+import { useAuth } from '../../contexts/AuthContexto';
 import { deslogar } from '../../firebase/auth';
 
 const ProfileHeader = styled.div`
