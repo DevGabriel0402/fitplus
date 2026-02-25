@@ -1,21 +1,89 @@
 import React from 'react';
 import styled from 'styled-components';
-import { NavLink } from 'react-router-dom';
-import { FiHome, FiActivity, FiStar, FiBell, FiUser } from 'react-icons/fi';
+import { NavLink, useNavigate, Link } from 'react-router-dom';
+import { FiHome, FiActivity, FiStar, FiBell, FiUser, FiSearch, FiLogOut, FiBookOpen } from 'react-icons/fi';
 import * as IconsFa from 'react-icons/fa';
-import { FaDumbbell } from 'react-icons/fa';
+const { FaDumbbell } = IconsFa;
+import { deslogar } from '../../firebase/auth';
+import { useAuth } from '../../contexts/AuthContexto';
 
 import { useAjustes } from '../../contexts/AjustesContexto';
 
 const ShellContainer = styled.div`
-
   display: flex;
   height: 100vh;
   width: 100%;
   background-color: var(--bg);
-  
+  position: relative;
+  overflow: hidden;
+
   @media (max-width: 768px) {
     flex-direction: column;
+  }
+`;
+
+const TopBar = styled.header`
+  width: 100%;
+  height: 60px;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 25px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.8);
+
+  @media (max-width: 768px) {
+    height: 100px;
+    padding: 15px;
+  }
+`;
+
+const TopBarLogo = styled(Link)`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--primary);
+  text-decoration: none;
+  
+  @media (min-width: 769px) {
+    display: none;
+  }
+`;
+
+const TopBarActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const TopBarBtn = styled.button`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background-color: rgba(var(--primary-rgb), 0.1);
+  }
+
+  @media (max-width: 768px) {
+    width: 36px;
+    height: 36px;
   }
 `;
 
@@ -130,13 +198,25 @@ const TabItem = styled(NavLink)`
 
 export const AppShell = ({ children, hideTabbar = false }) => {
   const { ajustes } = useAjustes();
+  const { usuario } = useAuth();
+  const navigate = useNavigate();
   const SelectedIcon = (ajustes?.iconePainel && IconsFa[ajustes.iconePainel]) || IconsFa.FaDumbbell;
 
+  const handleLogout = async () => {
+    try {
+      await deslogar();
+      navigate('/login');
+    } catch (error) {
+      console.error("Erro ao sair:", error);
+    }
+  };
 
   const menuItems = [
     { to: "/home", icon: <FiHome />, label: "Home" },
     { to: "/workouts", icon: <FiActivity />, label: "Treinos" },
     { to: "/perfil", icon: <FiUser />, label: "Perfil" },
+    { to: "/admin/sugestoes", icon: <FiStar />, label: "Sugestões (Admin)" },
+    { to: "/admin/artigos", icon: <FiBookOpen />, label: "Artigos (Admin)" },
   ];
 
 
@@ -144,9 +224,8 @@ export const AppShell = ({ children, hideTabbar = false }) => {
     <ShellContainer>
       <Sidebar>
         <Logo style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <SelectedIcon /> {ajustes?.nomePainel || 'FITBODY'}
+          <SelectedIcon /> {ajustes?.nomePainel || 'PERSONALPLUS'}
         </Logo>
-
 
         <SidebarNav>
           {menuItems.map(item => (
@@ -155,10 +234,26 @@ export const AppShell = ({ children, hideTabbar = false }) => {
               <span>{item.label}</span>
             </SidebarItem>
           ))}
+          <SidebarItem as="button" onClick={handleLogout} style={{ marginTop: 'auto', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
+            <FiLogOut />
+            <span>Sair</span>
+          </SidebarItem>
         </SidebarNav>
       </Sidebar>
 
       <ContentArea>
+        <TopBar>
+          <TopBarLogo to="/home">
+            <SelectedIcon /> {ajustes?.nomePainel || 'FITBODY'}
+          </TopBarLogo>
+
+
+          <TopBarActions>
+            <TopBarBtn onClick={() => navigate('/perfil')}><FiUser /></TopBarBtn>
+            <TopBarBtn onClick={handleLogout} style={{ color: '#ff5f5f' }} title="Sair"><FiLogOut /></TopBarBtn>
+          </TopBarActions>
+        </TopBar>
+
         <ContentWrapper>
           {children}
         </ContentWrapper>

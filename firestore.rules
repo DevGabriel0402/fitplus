@@ -29,6 +29,16 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
+    match /treinos_sugeridos/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /artigos/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
     // Regra padrão: negar tudo mais
     match /{document=**} {
       allow read, write: if false;

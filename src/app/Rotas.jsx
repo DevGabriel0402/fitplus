@@ -18,10 +18,16 @@ import EditPerfil from '../pages/Perfil/EditPerfil';
 import Ajustes from '../pages/Perfil/Ajustes';
 import Progresso from '../pages/Progresso/Progresso';
 
-import Busca from '../pages/Busca/Busca';
 import NovoTreino from '../pages/Workouts/NovoTreino';
 import ExecucaoTreino from '../pages/Workouts/ExecucaoTreino';
+import DetalhesTreino from '../pages/Workouts/DetalhesTreino';
 import DetalhesExercicio from '../pages/biblioteca/DetalhesExercicio';
+
+// Admin / Gerenciamento
+import GerenciarSugestoes from '../pages/Admin/GerenciarSugestoes';
+import NovaSugestao from '../pages/Admin/NovaSugestao';
+import GerenciarArtigos from '../pages/Admin/GerenciarArtigos';
+import NovoArtigo from '../pages/Admin/NovoArtigo';
 
 
 
@@ -92,6 +98,12 @@ export const Rotas = () => {
                 </RotaPrivada>
             } />
 
+            <Route path="/detalhes-treino/:id" element={
+                <RotaPrivada>
+                    <DetalhesTreino />
+                </RotaPrivada>
+            } />
+
             <Route path="/exercicio/:id" element={
                 <RotaPrivada>
                     <DetalhesExercicio />
@@ -136,9 +148,39 @@ export const Rotas = () => {
                 </RotaPrivada>
             } />
 
-            <Route path="/buscar" element={
+            <Route path="/admin/sugestoes" element={
                 <RotaPrivada>
-                    <Busca />
+                    <GerenciarSugestoes />
+                </RotaPrivada>
+            } />
+
+            <Route path="/admin/sugestoes/nova" element={
+                <RotaPrivada>
+                    <NovaSugestao />
+                </RotaPrivada>
+            } />
+
+            <Route path="/admin/sugestoes/editar/:id" element={
+                <RotaPrivada>
+                    <NovaSugestao />
+                </RotaPrivada>
+            } />
+
+            <Route path="/admin/artigos" element={
+                <RotaPrivada>
+                    <GerenciarArtigos />
+                </RotaPrivada>
+            } />
+
+            <Route path="/admin/artigos/novo" element={
+                <RotaPrivada>
+                    <NovoArtigo />
+                </RotaPrivada>
+            } />
+
+            <Route path="/admin/artigos/editar/:id" element={
+                <RotaPrivada>
+                    <NovoArtigo />
                 </RotaPrivada>
             } />
 

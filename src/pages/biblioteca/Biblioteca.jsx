@@ -153,6 +153,8 @@ const FloatingActionContainer = styled(motion.div)`
 `;
 
 
+// [REMOVE IMPORT] import { bibliotecaPadrao } from '../../data/bibliotecaPadrao';
+
 const Biblioteca = () => {
   const [busca, setBusca] = useState('');
   const [categoriaAtiva, setCategoriaAtiva] = useState('Todos');
@@ -172,7 +174,7 @@ const Biblioteca = () => {
   const { documentos: exercicios, carregando } = useColecao('exercicios');
   const navigate = useNavigate();
   const location = useLocation();
-  const isSelectionMode = location.state?.fromCreate || location.state?.pickingForWorkout;
+  const isSelectionMode = location.state?.fromCreate || location.state?.pickingForWorkout || location.state?.fromAdmin;
 
   const categorias = ['Todos', 'Bíceps', 'Tríceps', 'Peito', 'Costas', 'Ombros', 'Quadríceps', 'Panturrilha', 'Abdômen', 'Alongamento', 'Sem Equipamento'];
   const categoriasSimplificadas = categorias.filter(c => c !== 'Todos').map(c => ({ label: c, value: c }));
@@ -237,7 +239,8 @@ const Biblioteca = () => {
   const handleConfirmSelection = () => {
     if (selecionados.length === 0) return;
 
-    const draft = JSON.parse(localStorage.getItem('workout_draft_data') || '{}');
+    const draftKey = location.state?.fromAdmin ? 'suggestion_draft_data' : 'workout_draft_data';
+    const draft = JSON.parse(localStorage.getItem(draftKey) || '{}');
     const existingExercises = draft.exercicios || [];
 
     const newExercises = selecionados.map(ex => ({
@@ -248,18 +251,23 @@ const Biblioteca = () => {
       peso: ''
     }));
 
-    localStorage.setItem('workout_draft_data', JSON.stringify({
+    localStorage.setItem(draftKey, JSON.stringify({
       ...draft,
       exercicios: [...existingExercises, ...newExercises]
     }));
 
     toast.success(`${selecionados.length} exercícios adicionados!`);
-    navigate('/workouts/novo');
+
+    if (location.state?.fromAdmin) {
+      navigate(draft.id ? `/admin/sugestoes/editar/${draft.id}` : '/admin/sugestoes/nova');
+    } else {
+      navigate(draft.id ? `/workouts/editar/${draft.id}` : '/workouts/novo');
+    }
   };
 
   const exerciciosExemplo = [
-    { id: '1', nome: 'Supino Reto', categoria: 'Peito', alvo: 'Peitoral Maior', gifUrl: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3RwZ3B0Z3B0Z3B0Z3B0Z3B0Z3B0Z3B0Z3B0Z3B0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMG7X3f9yJvHVe/giphy.gif' },
-    { id: '2', nome: 'Agachamento', categoria: 'Quadríceps', alvo: 'Quadríceps', gifUrl: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3RwZ3B0Z3B0Z3B0Z3B0Z3B0Z3B0Z3B0Z3B0Z3B0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMG7X3f9yJvHVe/giphy.gif' },
+    { id: '1', nome: 'Supino Reto', categoria: 'Peito', alvo: 'Peitoral Maior', gifUrl: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3RwZ3B0Z3B0Z3B0Z3B0Z3B0Z3B0Z3B0Z3B0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMG7X3f9yJvHVe/giphy.gif' },
+    { id: '2', nome: 'Agachamento', categoria: 'Quadríceps', alvo: 'Quadríceps', gifUrl: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3RwZ3B0Z3B0Z3B0Z3B0Z3B0Z3B0Z3B0Z3B0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMG7X3f9yJvHVe/giphy.gif' },
   ];
 
   const listaExibicao = exercicios.length > 0 ? exercicios : exerciciosExemplo;
@@ -314,44 +322,44 @@ const Biblioteca = () => {
           ))}
         </CategoryScroll>
 
-        {carregando && exercicios.length === 0 ? (
-          <Typography.Body>Carregando exercícios...</Typography.Body>
-        ) : (
-          <ExerciseGrid>
-            {exerciciosFiltrados.map(ex => {
-              const isSelected = !!selecionados.find(s => s.id === (ex.id || ex.instanceId));
-              return (
-                <ExerciseCard
-                  key={ex.id || Math.random()}
-                  $selected={isSelected}
-                  onClick={() => isSelectionMode ? toggleSelecao(ex) : navigate(`/exercicio/${ex.id}`)}
-                >
-                  <ExerciseImage style={{ backgroundImage: `url(${ex.gifUrl})` }} />
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ fontSize: '16px' }}>{ex.nome}</h4>
-                    <Typography.Small>{ex.alvo} • {ex.categoria}</Typography.Small>
-                  </div>
-                  {isSelectionMode ? (
-                    isSelected ? (
-                      <SelectionBadge>
-                        <FiCheck size={16} />
-                      </SelectionBadge>
-                    ) : (
-                      <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid var(--border)' }} />
-                    )
-                  ) : (
-                    <Flex $gap="15px">
-                      <button onClick={(e) => abrirModalEdicao(ex, e)} style={{ padding: '8px', color: 'var(--primary)' }}>
-                        <FiEdit2 size={18} />
-                      </button>
-                      <FiChevronRight color="var(--muted)" />
-                    </Flex>
-                  )}
-                </ExerciseCard>
-              );
-            })}
-          </ExerciseGrid>
+        {carregando && exercicios.length === 0 && (
+          <Typography.Body style={{ marginBottom: '20px', opacity: 0.7 }}>Sincronizando biblioteca...</Typography.Body>
         )}
+
+        <ExerciseGrid>
+          {exerciciosFiltrados.map(ex => {
+            const isSelected = !!selecionados.find(s => s.id === (ex.id || ex.instanceId));
+            return (
+              <ExerciseCard
+                key={ex.id || Math.random()}
+                $selected={isSelected}
+                onClick={() => isSelectionMode ? toggleSelecao(ex) : navigate(`/exercicio/${ex.id}`)}
+              >
+                <ExerciseImage style={{ backgroundImage: `url("${ex.gifUrl || 'https://via.placeholder.com/150'}")` }} />
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ fontSize: '16px' }}>{ex.nome}</h4>
+                  <Typography.Small>{ex.alvo} • {ex.categoria}</Typography.Small>
+                </div>
+                {isSelectionMode ? (
+                  isSelected ? (
+                    <SelectionBadge>
+                      <FiCheck size={16} />
+                    </SelectionBadge>
+                  ) : (
+                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid var(--border)' }} />
+                  )
+                ) : (
+                  <Flex $gap="15px">
+                    <button onClick={(e) => abrirModalEdicao(ex, e)} style={{ padding: '8px', color: 'var(--primary)' }}>
+                      <FiEdit2 size={18} />
+                    </button>
+                    <FiChevronRight color="var(--muted)" />
+                  </Flex>
+                )}
+              </ExerciseCard>
+            );
+          })}
+        </ExerciseGrid>
 
         <AnimatePresence>
           {modalAberto && (

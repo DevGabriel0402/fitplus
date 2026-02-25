@@ -78,6 +78,7 @@ const Progresso = () => {
     const { dados } = useUsuario();
     const [historico, setHistorico] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [dataFiltro, setDataFiltro] = useState('');
 
     useEffect(() => {
         if (!usuario) return;
@@ -196,16 +197,51 @@ const Progresso = () => {
                 ) : (
                     <div>
                         <Flex $justify="space-between" style={{ marginBottom: '15px' }}>
-                            <Typography.H2 style={{ fontSize: '18px' }}>Atividades Recentes</Typography.H2>
-                            <FiCalendar size={16} color="var(--primary)" />
+                            <Typography.H2 style={{ fontSize: '18px' }}>
+                                {dataFiltro ? `Treinos em ${format(new Date(dataFiltro + 'T12:00:00'), 'dd/MM/yyyy')}` : 'Atividades Recentes'}
+                            </Typography.H2>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type="date"
+                                    id="date-picker"
+                                    value={dataFiltro}
+                                    onChange={(e) => setDataFiltro(e.target.value)}
+                                    style={{
+                                        position: 'absolute',
+                                        opacity: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                        cursor: 'pointer',
+                                        zIndex: 10
+                                    }}
+                                />
+                                <FiCalendar size={18} color={dataFiltro ? 'var(--primary)' : 'var(--muted)'} style={{ cursor: 'pointer' }} />
+                            </div>
                         </Flex>
+
+                        {dataFiltro && (
+                            <button
+                                onClick={() => setDataFiltro('')}
+                                style={{
+                                    fontSize: '12px',
+                                    color: 'var(--primary)',
+                                    marginBottom: '15px',
+                                    fontWeight: '700',
+                                    display: 'block'
+                                }}
+                            >
+                                Limpar Filtro
+                            </button>
+                        )}
 
                         {loading ? (
                             <Typography.Body style={{ fontSize: '14px' }}>Carregando...</Typography.Body>
-                        ) : historico.length === 0 ? (
-                            <Typography.Body style={{ fontSize: '14px' }}>Nenhum treino realizado ainda.</Typography.Body>
+                        ) : (dataFiltro ? historico.filter(h => isSameDay(new Date(h.data), new Date(dataFiltro + 'T12:00:00'))) : historico).length === 0 ? (
+                            <Typography.Body style={{ fontSize: '14px' }}>
+                                {dataFiltro ? 'Nenhum treino nesta data.' : 'Nenhum treino realizado ainda.'}
+                            </Typography.Body>
                         ) : (
-                            historico.map((act) => (
+                            (dataFiltro ? historico.filter(h => isSameDay(new Date(h.data), new Date(dataFiltro + 'T12:00:00'))) : historico).map((act) => (
                                 <ActivityItem key={act.id}>
                                     <div style={{ flex: 1 }}>
                                         <h4 style={{ fontSize: '14px', marginBottom: '2px', fontWeight: '600' }}>{act.nomeTreino}</h4>

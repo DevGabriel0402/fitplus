@@ -26,7 +26,8 @@ const AvatarContainer = styled.div`
   position: relative;
   margin-bottom: 15px;
 
-  svg { font-size: 40px; color: var(--muted); }
+  svg::nth-child(1) { font-size: 40px; color: var(--muted); }
+  svg::nth-child(2) { font-size: 15px; color: var(--muted); }
 `;
 
 const EditButton = styled.button`
@@ -102,8 +103,8 @@ const Perfil = () => {
             <Container>
                 <ProfileHeader>
                     <AvatarContainer>
-                        <FiUser />
-                        <EditButton onClick={() => navigate('/perfil/editar')}><FiEdit2 /></EditButton>
+                        <FiUser size={40} />
+                        <EditButton size={15} onClick={() => navigate('/perfil/editar')}><FiEdit2 /></EditButton>
                     </AvatarContainer>
                     <Typography.H2>{dados?.nome || 'Atleta'}</Typography.H2>
                     <Typography.Small>{dados?.email}</Typography.Small>
