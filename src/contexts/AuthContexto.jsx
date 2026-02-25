@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { auth } from '../firebase/auth';
 import { db } from '../firebase/firestore';
 
@@ -16,36 +16,42 @@ export const AuthProvider = ({ children }) => {
 
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    let unsubscribeProfile = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUsuario(user);
 
-        // Buscar dados do perfil no Firestore
-        try {
-          const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
-          if (userDoc.exists()) {
-            const data = userDoc.data();
+        // Escutar dados do perfil no Firestore em tempo real
+        const docRef = doc(db, 'usuarios', user.uid);
+        unsubscribeProfile = onSnapshot(docRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
             setDadosUsuario(data);
             setPerfilCompleto(data.setupCompleto || false);
           } else {
             setDadosUsuario(null);
             setPerfilCompleto(false);
           }
+          setCarregando(false);
+        }, (error) => {
+          console.error("Erro ao escutar perfil:", error);
+          setCarregando(false);
+        });
 
-        } catch (error) {
-          console.error("Erro ao carregar perfil:", error);
-          setPerfilCompleto(false);
-        }
       } else {
+        if (unsubscribeProfile) unsubscribeProfile();
         setUsuario(null);
         setDadosUsuario(null);
         setPerfilCompleto(false);
+        setCarregando(false);
       }
-
-      setCarregando(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeProfile) unsubscribeProfile();
+    };
   }, []);
 
   const value = {
