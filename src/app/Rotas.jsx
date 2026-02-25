@@ -42,7 +42,7 @@ import GerenciarFeedbacks from '../pages/Admin/GerenciarFeedbacks';
 
 
 const RotaPrivada = ({ children, precisaSetup = true, apenasAdmin = false }) => {
-    const { usuario, perfilCompelto, dadosUsuario } = useAuth();
+    const { usuario, perfilCompleto, dadosUsuario } = useAuth();
 
     if (!usuario) return <Navigate to="/login" />;
 
@@ -51,7 +51,7 @@ const RotaPrivada = ({ children, precisaSetup = true, apenasAdmin = false }) => 
         return <Navigate to="/login" />;
     }
 
-    if (precisaSetup && !perfilCompelto) return <Navigate to="/setup" />;
+    if (precisaSetup && !perfilCompleto) return <Navigate to="/setup" />;
 
     // Verificação de Admin
     if (apenasAdmin && dadosUsuario?.role?.toLowerCase() !== 'admin') {

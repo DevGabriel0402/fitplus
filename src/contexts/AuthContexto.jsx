@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [usuario, setUsuario] = useState(null);
   const [dadosUsuario, setDadosUsuario] = useState(null);
   const [carregando, setCarregando] = useState(true);
-  const [perfilCompelto, setPerfilCompleto] = useState(false);
+  const [perfilCompleto, setPerfilCompleto] = useState(false);
 
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }) => {
     usuario,
     dadosUsuario,
     carregando,
-    perfilCompelto,
+    perfilCompleto,
     setPerfilCompleto
 
   };
