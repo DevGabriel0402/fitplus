@@ -7,6 +7,7 @@ import { Container, Typography, Card, Flex, BotaoPrimario } from '../../ui/compo
 import { db } from '../../firebase/firestore';
 import { collection, query, getDocs, deleteDoc, doc, orderBy } from 'firebase/firestore';
 import toast from 'react-hot-toast';
+import { ConfirmModal } from '../../ui/components/ConfirmModal';
 
 const ArticleCard = styled(Card)`
   display: flex;
@@ -39,6 +40,7 @@ const GerenciarArtigos = () => {
     const navigate = useNavigate();
     const [artigos, setArtigos] = useState([]);
     const [carregando, setCarregando] = useState(true);
+    const [modalConfig, setModalConfig] = useState({ isOpen: false });
 
     const fetchArtigos = async () => {
         try {
@@ -59,14 +61,22 @@ const GerenciarArtigos = () => {
     }, []);
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Excluir este artigo?")) return;
-        try {
-            await deleteDoc(doc(db, 'artigos', id));
-            setArtigos(artigos.filter(a => a.id !== id));
-            toast.success("Excluído com sucesso!");
-        } catch (error) {
-            toast.error("Erro ao excluir.");
-        }
+        setModalConfig({
+            isOpen: true,
+            title: 'Excluir Artigo',
+            message: 'Tem certeza que deseja apagar este artigo permanentemente?',
+            isDestructive: true,
+            confirmText: 'Excluir',
+            onConfirm: async () => {
+                try {
+                    await deleteDoc(doc(db, 'artigos', id));
+                    setArtigos(artigos.filter(a => a.id !== id));
+                    toast.success("Excluído com sucesso!");
+                } catch (error) {
+                    toast.error("Erro ao excluir.");
+                }
+            }
+        });
     };
 
     return (
@@ -113,6 +123,11 @@ const GerenciarArtigos = () => {
                         </ArticleCard>
                     ))
                 )}
+
+                <ConfirmModal
+                    {...modalConfig}
+                    onCancel={() => setModalConfig({ ...modalConfig, isOpen: false })}
+                />
             </Container>
         </AppShell>
     );

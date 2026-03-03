@@ -29,8 +29,8 @@ const TopBar = styled.header`
   background-color: ${({ theme }) => theme.colors.surface};
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   display: flex;
-  flex-direction: column;
-  align-items: end;
+  flex-direction: row;
+  align-items: center;
   justify-content: space-between;
   padding: 10px;
   position: sticky;
@@ -39,10 +39,21 @@ const TopBar = styled.header`
   backdrop-filter: blur(10px);
   background-color: rgba(255, 255, 255, 0.8);
 
+
+   .hidden-mobile{
+flex: 1;
+
+   }
+
   @media (max-width: 768px) {
     height: 100px;
     padding: 15px;
     flex-direction: row;
+
+    .hidden-mobile {
+      display: none;
+      text-align: start;
+    }
   }
 `;
 
@@ -256,6 +267,10 @@ export const AppShell = ({ children, hideTabbar = false }) => {
           <TopBarLogo to="/home">
             <SelectedIcon /> {ajustes?.nomePainel || 'FITBODY'}
           </TopBarLogo>
+
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center', fontWeight: '600', color: 'var(--text)' }}>
+            <span className="hidden-mobile">Bem-vindo(a), {dadosUsuario?.nome?.split(' ')[0] || 'Aluno'}!</span>
+          </div>
 
 
           <TopBarActions>

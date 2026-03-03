@@ -22,8 +22,11 @@ import Progresso from '../pages/Progresso/Progresso';
 import NovoTreino from '../pages/Workouts/NovoTreino';
 import ExecucaoTreino from '../pages/Workouts/ExecucaoTreino';
 import DetalhesTreino from '../pages/Workouts/DetalhesTreino';
+import GeradorTreinos from '../pages/Workouts/GeradorTreinos';
 import DetalhesExercicio from '../pages/biblioteca/DetalhesExercicio';
 import DetalhesArtigo from '../pages/Artigos/DetalhesArtigo';
+import ListagemArtigos from '../pages/Artigos/ListagemArtigos';
+import ListagemTreinos from '../pages/Workouts/ListagemTreinos';
 
 // Admin / Gerenciamento
 import GerenciarSugestoes from '../pages/Admin/GerenciarSugestoes';
@@ -32,7 +35,9 @@ import GerenciarArtigos from '../pages/Admin/GerenciarArtigos';
 import NovoArtigo from '../pages/Admin/NovoArtigo';
 import DashboardAdmin from '../pages/Admin/DashboardAdmin';
 import GerenciarUsuarios from '../pages/Admin/GerenciarUsuarios';
+import PainelAlunoAdmin from '../pages/Admin/PainelAlunoAdmin';
 import GerenciarFeedbacks from '../pages/Admin/GerenciarFeedbacks';
+import GerenciarSolicitacoes from '../pages/Admin/GerenciarSolicitacoes';
 
 
 
@@ -98,6 +103,12 @@ export const Rotas = () => {
                 </RotaPrivada>
             } />
 
+            <Route path="/gerador-treinos" element={
+                <RotaPrivada apenasAdmin={true}>
+                    <GeradorTreinos />
+                </RotaPrivada>
+            } />
+
             <Route path="/workouts/editar/:id" element={
                 <RotaPrivada>
                     <NovoTreino />
@@ -154,6 +165,18 @@ export const Rotas = () => {
                 </RotaPrivada>
             } />
 
+            <Route path="/artigos" element={
+                <RotaPrivada>
+                    <ListagemArtigos />
+                </RotaPrivada>
+            } />
+
+            <Route path="/treinos-sugeridos" element={
+                <RotaPrivada>
+                    <ListagemTreinos />
+                </RotaPrivada>
+            } />
+
             <Route path="/perfil" element={
                 <RotaPrivada>
                     <Perfil />
@@ -191,9 +214,33 @@ export const Rotas = () => {
                 </RotaPrivada>
             } />
 
+            <Route path="/admin/usuarios/:alunoId" element={
+                <RotaPrivada apenasAdmin={true}>
+                    <PainelAlunoAdmin />
+                </RotaPrivada>
+            } />
+
+            <Route path="/admin/usuarios/:alunoId/novo-treino" element={
+                <RotaPrivada apenasAdmin={true}>
+                    <NovoTreino />
+                </RotaPrivada>
+            } />
+
+            <Route path="/admin/usuarios/:alunoId/gerador-treinos" element={
+                <RotaPrivada apenasAdmin={true}>
+                    <GeradorTreinos />
+                </RotaPrivada>
+            } />
+
             <Route path="/admin/feedbacks" element={
                 <RotaPrivada apenasAdmin={true}>
                     <GerenciarFeedbacks />
+                </RotaPrivada>
+            } />
+
+            <Route path="/admin/solicitacoes" element={
+                <RotaPrivada apenasAdmin={true}>
+                    <GerenciarSolicitacoes />
                 </RotaPrivada>
             } />
 

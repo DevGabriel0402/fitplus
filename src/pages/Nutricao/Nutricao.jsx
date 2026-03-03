@@ -390,7 +390,7 @@ const Nutricao = () => {
 
     return (
         <AppShell>
-            <Container style={{ paddingTop: '20px', paddingBottom: '80px' }}>
+            <Container>
 
                 <Flex $justify="space-between" $align="center" style={{ marginBottom: '20px' }}>
                     <Typography.H2 style={{ margin: 0 }}>Nutrição</Typography.H2>

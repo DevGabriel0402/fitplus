@@ -7,6 +7,7 @@ import { Container, Typography, Card, Flex, BotaoPrimario } from '../../ui/compo
 import { db } from '../../firebase/firestore';
 import { collection, query, getDocs, deleteDoc, doc, orderBy } from 'firebase/firestore';
 import toast from 'react-hot-toast';
+import { ConfirmModal } from '../../ui/components/ConfirmModal';
 
 const SuggestionCard = styled(Card)`
   display: flex;
@@ -37,6 +38,7 @@ const GerenciarSugestoes = () => {
     const navigate = useNavigate();
     const [sugestoes, setSugestoes] = useState([]);
     const [carregando, setCarregando] = useState(true);
+    const [modalConfig, setModalConfig] = useState({ isOpen: false });
 
     const fetchSugestoes = async () => {
         try {
@@ -57,14 +59,22 @@ const GerenciarSugestoes = () => {
     }, []);
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Excluir este treino sugerido?")) return;
-        try {
-            await deleteDoc(doc(db, 'treinos_sugeridos', id));
-            setSugestoes(sugestoes.filter(s => s.id !== id));
-            toast.success("Excluído com sucesso!");
-        } catch (error) {
-            toast.error("Erro ao excluir.");
-        }
+        setModalConfig({
+            isOpen: true,
+            title: 'Excluir Sugestão',
+            message: 'Tem certeza que deseja apagar este treino sugerido do banco de dados?',
+            isDestructive: true,
+            confirmText: 'Excluir',
+            onConfirm: async () => {
+                try {
+                    await deleteDoc(doc(db, 'treinos_sugeridos', id));
+                    setSugestoes(sugestoes.filter(s => s.id !== id));
+                    toast.success("Excluído com sucesso!");
+                } catch (error) {
+                    toast.error("Erro ao excluir.");
+                }
+            }
+        });
     };
 
     return (
@@ -111,6 +121,11 @@ const GerenciarSugestoes = () => {
                         </SuggestionCard>
                     ))
                 )}
+
+                <ConfirmModal
+                    {...modalConfig}
+                    onCancel={() => setModalConfig({ ...modalConfig, isOpen: false })}
+                />
             </Container>
         </AppShell>
     );

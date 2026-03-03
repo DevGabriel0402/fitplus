@@ -24,10 +24,11 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 import { useAuth } from '../../contexts/AuthContexto';
 import toast from 'react-hot-toast';
+import { ConfirmModal } from '../../ui/components/ConfirmModal';
 
 const ExerciseItem = styled(Card)`
   padding: 10px;
@@ -192,18 +193,21 @@ const SortableExerciseItem = ({ ex, index, removerExercicio, atualizarExercicio 
 const NovoTreino = () => {
     const { usuario } = useAuth();
     const navigate = useNavigate();
-    const { id } = useParams();
+    const { id, alunoId } = useParams();
     const [nomeTreino, setNomeTreino] = useState('');
     const [exercicios, setExercicios] = useState([]);
     const [salvando, setSalvando] = useState(false);
     const [carregando, setCarregando] = useState(false);
+    const [modalConfig, setModalConfig] = useState({ isOpen: false });
+
+    const targetUid = alunoId || usuario.uid;
 
     useEffect(() => {
         if (id) {
             const fetchTreino = async () => {
                 setCarregando(true);
                 try {
-                    const docRef = doc(db, `treinos/${usuario.uid}/lista`, id);
+                    const docRef = doc(db, `treinos/${targetUid}/lista`, id);
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists()) {
                         const data = docSnap.data();
@@ -229,7 +233,7 @@ const NovoTreino = () => {
             if (draft.nomeTreino) setNomeTreino(draft.nomeTreino);
             if (draft.exercicios) setExercicios(draft.exercicios);
         }
-    }, [id, usuario.uid, navigate]);
+    }, [id, targetUid, navigate]);
 
     useEffect(() => {
         if (!id && (nomeTreino || exercicios.length > 0)) {
@@ -266,23 +270,55 @@ const NovoTreino = () => {
             };
 
             if (id) {
-                const docRef = doc(db, `treinos/${usuario.uid}/lista`, id);
+                const docRef = doc(db, `treinos/${targetUid}/lista`, id);
                 await updateDoc(docRef, treinoData);
                 toast.success('Treino atualizado com sucesso!');
             } else {
                 treinoData.criadoEm = serverTimestamp();
-                treinoData.usuarioId = usuario.uid;
-                await addDoc(collection(db, `treinos/${usuario.uid}/lista`), treinoData);
+                treinoData.usuarioId = targetUid;
+                await addDoc(collection(db, `treinos/${targetUid}/lista`), treinoData);
                 localStorage.removeItem('workout_draft_data');
                 toast.success('Treino criado com sucesso!');
             }
-            navigate('/workouts');
+            navigate(alunoId ? '/admin/usuarios' : '/workouts');
         } catch (error) {
             console.error("Erro ao salvar treino:", error);
             toast.error('Erro ao salvar treino.');
         } finally {
             setSalvando(false);
         }
+    };
+
+    const deletarTreino = async () => {
+        if (!id) return;
+
+        setModalConfig({
+            isOpen: true,
+            title: 'Excluir Treino',
+            message: 'Tem certeza que deseja apagar este treino permanentemente?',
+            isDestructive: true,
+            confirmText: 'Excluir',
+            onConfirm: async () => {
+                setCarregando(true);
+                try {
+                    await deleteDoc(doc(db, `treinos/${targetUid}/lista`, id));
+
+                    const activeWorkout = JSON.parse(localStorage.getItem(`active_workout_${targetUid}`) || 'null');
+                    if (activeWorkout && activeWorkout.id === id) {
+                        localStorage.removeItem(`active_workout_${targetUid}`);
+                        localStorage.removeItem(`workout_session_${id}_${targetUid}`);
+                    }
+
+                    toast.success('Treino excluído!');
+                    navigate(alunoId ? '/admin/usuarios' : '/workouts');
+                } catch (error) {
+                    console.error("Erro ao excluir treino:", error);
+                    toast.error('Erro ao excluir treino.');
+                } finally {
+                    setCarregando(false);
+                }
+            }
+        });
     };
 
     const sensors = useSensors(
@@ -307,8 +343,8 @@ const NovoTreino = () => {
         <AppShell hideTabbar>
             <Container>
                 <Flex $justify="space-between" style={{ marginTop: '20px', marginBottom: '30px' }}>
-                    <button onClick={() => navigate('/workouts')}><FiArrowLeft size={24} color="var(--text)" /></button>
-                    <Typography.H2 style={{ margin: 0 }}>{id ? 'Editar Ficha' : 'Criar Ficha'}</Typography.H2>
+                    <button onClick={() => navigate(alunoId ? '/admin/usuarios' : '/workouts')}><FiArrowLeft size={24} color="var(--text)" /></button>
+                    <Typography.H2 style={{ margin: 0 }}>{id ? 'Editar Ficha' : (alunoId ? 'Ficha do Aluno' : 'Criar Ficha')}</Typography.H2>
                     <button onClick={salvarTreino} disabled={salvando} style={{ color: 'var(--primary)' }}>
                         <FiSave size={24} />
                     </button>
@@ -361,13 +397,29 @@ const NovoTreino = () => {
                     </DndContext>
                 )}
 
-                <BotaoPrimario
-                    onClick={salvarTreino}
-                    disabled={salvando}
-                    style={{ marginTop: '40px', marginBottom: '40px' }}
-                >
-                    {salvando ? 'Salvando...' : 'Salvar Treino'}
-                </BotaoPrimario>
+                <Flex $gap="15px" style={{ marginTop: '40px', marginBottom: '40px' }}>
+                    {id && (
+                        <BotaoPrimario
+                            onClick={deletarTreino}
+                            disabled={salvando || carregando}
+                            style={{ flex: 1, backgroundColor: 'transparent', border: '1px solid #ff5f5f', color: '#ff5f5f' }}
+                        >
+                            Excluir Treino
+                        </BotaoPrimario>
+                    )}
+                    <BotaoPrimario
+                        onClick={salvarTreino}
+                        disabled={salvando}
+                        style={{ flex: 2 }}
+                    >
+                        {salvando ? 'Salvando...' : 'Salvar Treino'}
+                    </BotaoPrimario>
+                </Flex>
+
+                <ConfirmModal
+                    {...modalConfig}
+                    onCancel={() => setModalConfig({ ...modalConfig, isOpen: false })}
+                />
             </Container>
         </AppShell>
     );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FiActivity, FiUser, FiPlus, FiBookOpen, FiHeart, FiStar, FiX } from 'react-icons/fi';
-import { FaCalculator, FaDrumstickBite } from 'react-icons/fa';
+import { FaCalculator, FaDrumstickBite, FaMagic } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAjustes } from '../../contexts/AjustesContexto';
 import { AppShell } from '../../ui/AppShell/AppShell';
@@ -17,8 +17,9 @@ import { db } from '../../firebase/firestore';
 import { useColecao } from '../../hooks/useColecao';
 
 const ShortcutGrid = styled.div`
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; padding: 0 20px; margin-bottom: 30px; margin-top: 20px;
-  @media (max-width: 400px) { grid-template-columns: repeat(4, 1fr); }
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; padding: 0 20px; margin-bottom: 30px; margin-top: 20px;
+  @media (max-width: 768px) { grid-template-columns: repeat(3, 1fr); gap: 15px; }
+  @media (max-width: 400px) { grid-template-columns: repeat(3, 1fr); gap: 10px; }
 `;
 const ShortcutItem = styled.div`
   display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer;
@@ -39,12 +40,32 @@ const ActionCard = styled(Card)`
   .image { height: 160px; background-size: cover; background-position: center; @media (max-width: 768px) { height: 120px; } }
   .content { padding: 15px; }
   .tag { position: absolute; top: 10px; left: 10px; padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+  h4 {
+    margin-top: 8px;
+    font-size: 18px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.3;
+    height: 2.6em; /* Ensure consistent height for 2 lines */
+  }
 `;
 
 const ArticleItem = styled(Card)`
   min-width: 300px; display: flex; gap: 15px; padding: 15px; cursor: pointer;
   &:hover { border-color: var(--primary); }
   .thumb { width: 80px; height: 80px; border-radius: 12px; background-size: cover; background-position: center; flex-shrink: 0; }
+  h4 {
+    margin: 5px 0;
+    font-size: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.3;
+    height: 2.6em;
+  }
 `;
 
 const ModalOverlay = styled(motion.div)`
@@ -316,7 +337,7 @@ const ProteinaModal = ({ isOpen, onClose, userId, initialPeso }) => {
 
 const Home = () => {
   const { dados, carregando: userLoading } = useUsuario();
-  const { usuario } = useAuth();
+  const { usuario, dadosUsuario } = useAuth();
   const navigate = useNavigate();
   const { ajustes } = useAjustes();
   const [sugeridos, setSugeridos] = useState([]);
@@ -384,85 +405,95 @@ const Home = () => {
         initialPeso={dados?.peso}
       />
 
-      <ShortcutGrid>
-        <ShortcutItem onClick={() => navigate('/workouts/novo')}>
-          <div className="icon"><FiPlus /></div>
-          <span>Criar Treino</span>
-        </ShortcutItem>
-        <ShortcutItem onClick={() => setModalImcAberto(true)}>
-          <div className="icon" style={{ color: '#00c2ff' }}><FaCalculator /></div>
-          <span>Calc. IMC</span>
-        </ShortcutItem>
-        <ShortcutItem onClick={() => setModalProteinaAberto(true)}>
-          <div className="icon" style={{ color: '#4CAF50' }}><FaDrumstickBite /></div>
-          <span>Proteína</span>
-        </ShortcutItem>
-        <ShortcutItem onClick={() => navigate('/progresso')}>
-          <div className="icon" style={{ color: '#ff8c00' }}><FiActivity /></div>
-          <span>Histórico</span>
-        </ShortcutItem>
-        <ShortcutItem onClick={() => navigate('/perfil')}>
-          <div className="icon" style={{ color: 'var(--primary)' }}><FiUser /></div>
-          <span>Meu Perfil</span>
-        </ShortcutItem>
-      </ShortcutGrid>
+      <Container>
+        <ShortcutGrid>
+          {dadosUsuario?.role?.toLowerCase() === 'admin' && (
+            <>
+              <ShortcutItem onClick={() => navigate('/workouts/novo')}>
+                <div className="icon"><FiPlus /></div>
+                <span>Criar Treino</span>
+              </ShortcutItem>
+              <ShortcutItem onClick={() => navigate('/gerador-treinos')}>
+                <div className="icon" style={{ color: '#8A2BE2' }}><FaMagic /></div>
+                <span>Gerar c/ IA</span>
+              </ShortcutItem>
+            </>
+          )}
+          <ShortcutItem onClick={() => setModalImcAberto(true)}>
+            <div className="icon" style={{ color: '#00c2ff' }}><FaCalculator /></div>
+            <span>Calc. IMC</span>
+          </ShortcutItem>
+          <ShortcutItem onClick={() => setModalProteinaAberto(true)}>
+            <div className="icon" style={{ color: '#4CAF50' }}><FaDrumstickBite /></div>
+            <span>Proteína</span>
+          </ShortcutItem>
+          <ShortcutItem onClick={() => navigate('/progresso')}>
+            <div className="icon" style={{ color: '#ff8c00' }}><FiActivity /></div>
+            <span>Histórico</span>
+          </ShortcutItem>
+          <ShortcutItem onClick={() => navigate('/perfil')}>
+            <div className="icon" style={{ color: 'var(--primary)' }}><FiUser /></div>
+            <span>Meu Perfil</span>
+          </ShortcutItem>
+        </ShortcutGrid>
 
-      <SectionHeader>
-        <Typography.H2>Treinos Sugeridos</Typography.H2>
-        <Typography.Small style={{ color: 'var(--primary)', cursor: 'pointer' }} onClick={() => navigate('/biblioteca')}>Explorar tudo</Typography.Small>
-      </SectionHeader>
+        <SectionHeader>
+          <Typography.H2>Treinos Sugeridos</Typography.H2>
+          <Typography.Small style={{ color: 'var(--primary)', cursor: 'pointer' }} onClick={() => navigate('/treinos-sugeridos')}>Explorar tudo</Typography.Small>
+        </SectionHeader>
 
-      <ScrollGrid>
-        {sugeridos.map(treino => (
-          <ActionCard key={treino.id} onClick={() => navigate(`/detalhes-treino/${treino.id}`)}>
-            <div className="image" style={{ backgroundImage: `url(${treino.image})` }}>
-              <button
-                onClick={(e) => toggleFavorito(e, treino, 'treino')}
-                style={{
-                  position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.4)',
-                  border: 'none', borderRadius: '50%', width: 32, height: 32,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: isFavorito(treino.id) ? '#FFD700' : 'white'
-                }}
-              >
-                <FiStar fill={isFavorito(treino.id) ? '#FFD700' : 'none'} size={18} />
-              </button>
-            </div>
-            <div className="tag" style={{ backgroundColor: treino.tagColor || 'var(--secondary)', color: '#000' }}>{treino.tag}</div>
-            <div className="content">
-              <Typography.Small>{treino.nivel} • {treino.duracao}</Typography.Small>
-              <h4 style={{ marginTop: '8px', fontSize: '18px' }}>{treino.nomeTreino}</h4>
-            </div>
-          </ActionCard>
-        ))}
-      </ScrollGrid>
-
-      <SectionHeader>
-        <Typography.H2>Dicas e Artigos</Typography.H2>
-        <Typography.Small style={{ color: 'var(--primary)', cursor: 'pointer' }} onClick={() => navigate('/biblioteca')}>Ver tudo</Typography.Small>
-      </SectionHeader>
-
-      <ScrollGrid>
-        {artigos.length === 0 && !loading ? (
-          <Typography.Body style={{ padding: '0 20px', opacity: 0.6 }}>Nenhuma dica postada ainda.</Typography.Body>
-        ) : (
-          artigos.map(artigo => (
-            <ArticleItem key={artigo.id} onClick={() => navigate(`/artigo/${artigo.id}`)}>
-              <div className="thumb" style={{ backgroundImage: `url(${artigo.image})` }} />
-              <div style={{ flex: 1 }}>
-                <Typography.Small style={{ color: 'var(--primary)', fontWeight: '700' }}>{artigo.categoria}</Typography.Small>
-                <h4 style={{ margin: '5px 0', fontSize: '16px' }}>{artigo.titulo}</h4>
-                <Typography.Small>{artigo.tempoLeitura}</Typography.Small>
+        <ScrollGrid>
+          {sugeridos.map(treino => (
+            <ActionCard key={treino.id} onClick={() => navigate(`/detalhes-treino/${treino.id}`)}>
+              <div className="image" style={{ backgroundImage: `url(${treino.image})` }}>
+                <button
+                  onClick={(e) => toggleFavorito(e, treino, 'treino')}
+                  style={{
+                    position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.4)',
+                    border: 'none', borderRadius: '50%', width: 32, height: 32,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: isFavorito(treino.id) ? '#FFD700' : 'white'
+                  }}
+                >
+                  <FiStar fill={isFavorito(treino.id) ? '#FFD700' : 'none'} size={18} />
+                </button>
               </div>
-              <button
-                onClick={(e) => toggleFavorito(e, artigo, 'artigo')}
-                style={{ background: 'none', border: 'none', color: isFavorito(artigo.id) ? '#FF4B4B' : 'var(--muted)', alignSelf: 'center' }}
-              >
-                <FiHeart fill={isFavorito(artigo.id) ? '#FF4B4B' : 'none'} size={20} />
-              </button>
-            </ArticleItem>
-          ))
-        )}
-      </ScrollGrid>
+              <div className="tag" style={{ backgroundColor: treino.tagColor || 'var(--secondary)', color: '#000' }}>{treino.tag}</div>
+              <div className="content">
+                <Typography.Small>{treino.nivel} • {treino.duracao}</Typography.Small>
+                <h4 style={{ marginTop: '8px', fontSize: '18px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}>{treino.nomeTreino}</h4>
+              </div>
+            </ActionCard>
+          ))}
+        </ScrollGrid>
+
+        <SectionHeader>
+          <Typography.H2>Dicas e Artigos</Typography.H2>
+          <Typography.Small style={{ color: 'var(--primary)', cursor: 'pointer' }} onClick={() => navigate('/artigos')}>Ver tudo</Typography.Small>
+        </SectionHeader>
+
+        <ScrollGrid>
+          {artigos.length === 0 && !loading ? (
+            <Typography.Body style={{ padding: '0 20px', opacity: 0.6 }}>Nenhuma dica postada ainda.</Typography.Body>
+          ) : (
+            artigos.map(artigo => (
+              <ArticleItem key={artigo.id} onClick={() => navigate(`/artigo/${artigo.id}`)}>
+                <div className="thumb" style={{ backgroundImage: `url(${artigo.image})` }} />
+                <div style={{ flex: 1 }}>
+                  <Typography.Small style={{ color: 'var(--primary)', fontWeight: '700' }}>{artigo.categoria}</Typography.Small>
+                  <h4 style={{ margin: '5px 0', fontSize: '16px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}>{artigo.titulo}</h4>
+                  <Typography.Small>{artigo.tempoLeitura}</Typography.Small>
+                </div>
+                <button
+                  onClick={(e) => toggleFavorito(e, artigo, 'artigo')}
+                  style={{ background: 'none', border: 'none', color: isFavorito(artigo.id) ? '#FF4B4B' : 'var(--muted)', alignSelf: 'center' }}
+                >
+                  <FiHeart fill={isFavorito(artigo.id) ? '#FF4B4B' : 'none'} size={20} />
+                </button>
+              </ArticleItem>
+            ))
+          )}
+        </ScrollGrid>
+      </Container>
     </AppShell>
   );
 };

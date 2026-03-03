@@ -15,7 +15,7 @@ service cloud.firestore {
     function isActive() {
       return isAuth() && 
         (!exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) || 
-         get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.ativo != false);
+         get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.get('ativo', true) == true);
     }
 
     // Função para verificar se é o dono do documento
@@ -38,7 +38,10 @@ service cloud.firestore {
     }
 
     // Coleções privadas do usuário: Dono (Ativo) ou Admin
-    match /treinos/{userId}/{document=**} { allow read, write: if isOwner(userId) || isAdmin(); }
+    match /treinos/{userId}/{document=**} { 
+      allow read, create, update: if isOwner(userId) || isAdmin(); 
+      allow delete: if isAdmin();
+    }
     match /favoritos/{userId}/{document=**} { allow read, write: if isOwner(userId) || isAdmin(); }
     match /notificacoes/{userId}/{document=**} { allow read, write: if isOwner(userId) || isAdmin(); }
     match /treinos_historico/{userId}/{document=**} { allow read, write: if isOwner(userId) || isAdmin(); }
@@ -66,6 +69,13 @@ service cloud.firestore {
     match /feedbacks/{docId} {
       allow read, delete: if isAdmin();
       allow create: if isAuth() && isActive(); 
+    }
+
+    // Solicitações de Ficha
+    match /solicitacoes/{docId} {
+      allow read: if isAuth() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuth() && isActive() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
     }
 
     // Bloqueio padrão para qualquer outra coleção

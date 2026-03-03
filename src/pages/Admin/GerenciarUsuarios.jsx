@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiUser, FiMail, FiPhone, FiCheckCircle, FiXCircle, FiShield } from 'react-icons/fi';
+import { FiArrowLeft, FiUser, FiMail, FiPhone, FiCheckCircle, FiXCircle, FiShield, FiFileText, FiZap } from 'react-icons/fi';
 import { AppShell } from '../../ui/AppShell/AppShell';
 import { Container, Typography, Card, Flex } from '../../ui/components/BaseUI';
 import { db } from '../../firebase/firestore';
 import { collection, query, getDocs, orderBy, doc, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { maskTelefone } from '../../utils/masks';
+import { ConfirmModal } from '../../ui/components/ConfirmModal';
 
 const UserCard = styled(Card)`
   display: flex;
@@ -54,6 +55,7 @@ const GerenciarUsuarios = () => {
     const navigate = useNavigate();
     const [usuarios, setUsuarios] = useState([]);
     const [carregando, setCarregando] = useState(true);
+    const [modalConfig, setModalConfig] = useState({ isOpen: false });
 
     const fetchUsuarios = async () => {
         try {
@@ -71,22 +73,30 @@ const GerenciarUsuarios = () => {
 
     const toggleStatus = async (userId, currentStatus) => {
         const text = currentStatus === false ? "ativar" : "desativar";
-        if (!window.confirm(`Deseja realmente ${text} este aluno?`)) return;
 
-        try {
-            const userRef = doc(db, 'usuarios', userId);
-            await updateDoc(userRef, {
-                ativo: currentStatus === false
-            });
+        setModalConfig({
+            isOpen: true,
+            title: `${currentStatus === false ? 'A' : 'Desa'}tivar Aluno`,
+            message: `Deseja realmente ${text} este aluno?`,
+            isDestructive: currentStatus !== false,
+            confirmText: currentStatus === false ? 'Ativar' : 'Desativar',
+            onConfirm: async () => {
+                try {
+                    const userRef = doc(db, 'usuarios', userId);
+                    await updateDoc(userRef, {
+                        ativo: currentStatus === false
+                    });
 
-            setUsuarios(usuarios.map(u =>
-                u.id === userId ? { ...u, ativo: currentStatus === false } : u
-            ));
-            toast.success(`Usuário ${text}ado!`);
-        } catch (error) {
-            console.error("Erro ao alterar status:", error);
-            toast.error("Erro ao alterar status do usuário.");
-        }
+                    setUsuarios(usuarios.map(u =>
+                        u.id === userId ? { ...u, ativo: currentStatus === false } : u
+                    ));
+                    toast.success(`Usuário ${text}ado!`);
+                } catch (error) {
+                    console.error("Erro ao alterar status:", error);
+                    toast.error("Erro ao alterar status do usuário.");
+                }
+            }
+        });
     };
 
     useEffect(() => {
@@ -146,17 +156,38 @@ const GerenciarUsuarios = () => {
                                 </Flex>
 
                                 {user.role !== 'admin' && (
-                                    <StatusBtn
-                                        $active={user.ativo !== false}
-                                        onClick={() => toggleStatus(user.id, user.ativo ?? true)}
-                                    >
-                                        {user.ativo === false ? 'Reativar Aluno' : 'Desativar Aluno'}
-                                    </StatusBtn>
+                                    <Flex $gap="10px">
+                                        <StatusBtn
+                                            $active={false}
+                                            style={{ backgroundColor: 'transparent', color: 'var(--primary)', border: '1px solid var(--primary)', display: 'flex', alignItems: 'center', gap: '5px' }}
+                                            onClick={() => navigate(`/admin/usuarios/${user.id}/gerador-treinos`)}
+                                        >
+                                            <FiZap size={14} /> Ficha IA
+                                        </StatusBtn>
+                                        <StatusBtn
+                                            $active={false}
+                                            style={{ backgroundColor: 'var(--primary)', color: '#000', border: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}
+                                            onClick={() => navigate(`/admin/usuarios/${user.id}`)}
+                                        >
+                                            <FiFileText size={14} /> Ficha
+                                        </StatusBtn>
+                                        <StatusBtn
+                                            $active={user.ativo !== false}
+                                            onClick={() => toggleStatus(user.id, user.ativo ?? true)}
+                                        >
+                                            {user.ativo === false ? 'Reativar Aluno' : 'Desativar Aluno'}
+                                        </StatusBtn>
+                                    </Flex>
                                 )}
                             </Flex>
                         </UserCard>
                     ))
                 )}
+
+                <ConfirmModal
+                    {...modalConfig}
+                    onCancel={() => setModalConfig({ ...modalConfig, isOpen: false })}
+                />
             </Container>
         </AppShell>
     );

@@ -77,6 +77,7 @@ const Cadastro = () => {
                 nome,
                 email,
                 setupCompleto: false,
+                ativo: true,
                 criadoEm: new Date()
             });
 

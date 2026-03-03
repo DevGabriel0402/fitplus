@@ -131,9 +131,41 @@ const SetupWizard = () => {
 
     const finalizarSetup = async () => {
         try {
+            // Cálculos Automáticos de IMC e Proteína baseados nos dados
+            let dadosCalculados = {};
+            if (dados.peso && dados.altura) {
+                // Cálculo IMC
+                const altMetros = parseFloat(dados.altura) > 3 ? parseFloat(dados.altura) / 100 : parseFloat(dados.altura);
+                const imcValue = (parseFloat(dados.peso) / (altMetros * altMetros)).toFixed(1);
+                let statusImc = 'Peso normal';
+                if (imcValue < 18.5) statusImc = 'Abaixo do peso';
+                else if (imcValue < 25) statusImc = 'Peso normal';
+                else if (imcValue < 30) statusImc = 'Sobrepeso';
+                else statusImc = 'Obesidade';
+
+                // Cálculo Proteína
+                let mult = { min: 1.6, max: 1.8, label: 'Manter' };
+                if (dados.objetivo === 'Ganhar Músculo') mult = { min: 1.8, max: 2.2, label: 'Ganhar Massa' };
+                else if (dados.objetivo === 'Perder Peso') mult = { min: 1.6, max: 2.0, label: 'Emagrecimento' };
+                else if (dados.nivelAtividade === 'Iniciante (1-2 dias/sem)') mult = { min: 1.4, max: 1.6, label: 'Atividade Leve' };
+
+                const p = parseFloat(dados.peso);
+                const idealProt = (p * ((mult.min + mult.max) / 2)).toFixed(0);
+
+                dadosCalculados = {
+                    imc: imcValue,
+                    statusImc: statusImc,
+                    proteinaDiaria: idealProt,
+                    proteinaRange: `${(p * mult.min).toFixed(0)}-${(p * mult.max).toFixed(0)}`,
+                    objetivoProteina: mult.label
+                };
+            }
+
             await setDoc(doc(db, 'usuarios', usuario.uid), {
                 ...dados,
+                ...dadosCalculados,
                 setupCompleto: true,
+                ativo: true,
                 atualizadoEm: new Date()
             }, { merge: true });
             setPerfilCompleto(true);

@@ -116,6 +116,13 @@ const DashboardAdmin = () => {
             icon: <FiMessageSquare />,
             path: "/admin/feedbacks",
             color: "#FF4785"
+        },
+        {
+            title: "Pedidos de Ficha",
+            desc: "Fichas solicitadas",
+            icon: <FiMessageSquare />,
+            path: "/admin/solicitacoes",
+            color: "#E91E63"
         }
     ];
 

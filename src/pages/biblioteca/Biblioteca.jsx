@@ -8,11 +8,12 @@ import { Container, Typography, Card, Flex, InputField, Label, InputWrapper, Bot
 import CustomSelect from '../../ui/components/CustomSelect';
 import { useColecao } from '../../hooks/useColecao';
 import { db } from '../../firebase/firestore';
-import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiEdit2 } from 'react-icons/fi';
+import { FiEdit2, FiTrash2 } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContexto';
+import { ConfirmModal } from '../../ui/components/ConfirmModal';
 
 const SearchBar = styled.div`
   position: relative;
@@ -73,12 +74,17 @@ const ExerciseCard = styled(Card)`
   align-items: center;
   transition: all 0.2s;
   cursor: pointer;
-  border: 1px solid ${({ $selected }) => ($selected ? 'var(--primary)' : 'var(--border)')};
-  background-color: ${({ $selected }) => ($selected ? 'rgba(var(--primary-rgb), 0.05)' : 'var(--card)')};
+  border: 1px solid ${({ $selected, $isDuplicate }) => ($isDuplicate ? '#ff5f5f' : ($selected ? 'var(--primary)' : 'var(--border)'))};
+  background-color: ${({ $selected, $isDuplicate }) => ($isDuplicate ? '#ff5f5f' : ($selected ? 'rgba(var(--primary-rgb), 0.05)' : 'var(--card)'))};
+  color: ${({ $isDuplicate }) => ($isDuplicate ? '#fff' : 'inherit')};
   position: relative;
 
+  h4, small {
+      color: ${({ $isDuplicate }) => ($isDuplicate ? '#fff' : 'inherit')};
+  }
+
   &:hover {
-    border-color: var(--primary);
+    border-color: ${({ $isDuplicate }) => ($isDuplicate ? '#ff3232' : 'var(--primary)')};
     transform: translateY(-2px);
   }
 
@@ -171,6 +177,7 @@ const Biblioteca = () => {
     dicas: ''
   });
   const [salvando, setSalvando] = useState(false);
+  const [modalConfig, setModalConfig] = useState({ isOpen: false });
   const { dadosUsuario } = useAuth();
 
   const { documentos: exercicios, carregando } = useColecao('exercicios');
@@ -238,6 +245,25 @@ const Biblioteca = () => {
     }
   };
 
+  const deletarExercicio = async (id, e) => {
+    e.stopPropagation();
+    setModalConfig({
+      isOpen: true,
+      title: 'Excluir Exercício',
+      message: 'Tem certeza que deseja excluir permanentemente este exercício da biblioteca?',
+      isDestructive: true,
+      confirmText: 'Excluir',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'exercicios', id));
+          toast.success("Exercício excluído com sucesso.");
+        } catch (error) {
+          toast.error("Erro ao excluir o exercício.");
+        }
+      }
+    });
+  };
+
   const handleConfirmSelection = () => {
     if (selecionados.length === 0) return;
 
@@ -285,9 +311,24 @@ const Biblioteca = () => {
     return matchesBusca && matchesCategoria;
   });
 
+  // Calculate duplicates using both name and category
+  const nameCategoryCounts = {};
+  exercicios.forEach(ex => {
+    const nomeNorm = normalizeStr(ex.nome);
+    const catNorm = normalizeStr(ex.categoria);
+    const key = `${nomeNorm}-${catNorm}`;
+    nameCategoryCounts[key] = (nameCategoryCounts[key] || 0) + 1;
+  });
+  const duplicatesSet = new Set(
+    exercicios.filter(ex => {
+      const key = `${normalizeStr(ex.nome)}-${normalizeStr(ex.categoria)}`;
+      return nameCategoryCounts[key] > 1;
+    }).map(ex => ex.id)
+  );
+
   return (
     <AppShell>
-      <Container style={{ paddingBottom: isSelectionMode ? '100px' : '20px' }}>
+      <Container>
         <Flex $justify="space-between" style={{ marginTop: '20px' }}>
           <Typography.H1 style={{ margin: 0 }}>Biblioteca</Typography.H1>
           {dadosUsuario?.role?.toLowerCase() === 'admin' && (
@@ -328,16 +369,20 @@ const Biblioteca = () => {
         <ExerciseGrid>
           {exerciciosFiltrados.map(ex => {
             const isSelected = !!selecionados.find(s => s.id === (ex.id || ex.instanceId));
+            const isDuplicate = duplicatesSet.has(ex.id);
             return (
               <ExerciseCard
                 key={ex.id || Math.random()}
                 $selected={isSelected}
+                $isDuplicate={isDuplicate}
                 onClick={() => isSelectionMode ? toggleSelecao(ex) : navigate(`/exercicio/${ex.id}`)}
               >
                 <ExerciseImage style={{ backgroundImage: `url("${ex.gifUrl || 'https://via.placeholder.com/150'}")` }} />
                 <div style={{ flex: 1 }}>
                   <h4 style={{ fontSize: '16px' }}>{ex.nome}</h4>
-                  <Typography.Small>{ex.alvo} • {ex.categoria}</Typography.Small>
+                  <Typography.Small style={{ color: isDuplicate ? 'rgba(255,255,255,0.8)' : undefined }}>
+                    {ex.alvo} • {ex.categoria}
+                  </Typography.Small>
                 </div>
                 {isSelectionMode ? (
                   isSelected ? (
@@ -345,15 +390,18 @@ const Biblioteca = () => {
                       <FiCheck size={16} />
                     </SelectionBadge>
                   ) : (
-                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid var(--border)' }} />
+                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid var(--border)', borderColor: isDuplicate ? '#fff' : undefined }} />
                   )
                 ) : (
                   !isSelectionMode && dadosUsuario?.role?.toLowerCase() === 'admin' && (
                     <Flex $gap="10px">
-                      <button onClick={(e) => { e.stopPropagation(); abrirModalEdicao(ex, e); }} style={{ color: 'var(--muted)' }}>
+                      <button onClick={(e) => abrirModalEdicao(ex, e)} style={{ color: isDuplicate ? '#fff' : 'var(--muted)' }}>
                         <FiEdit2 size={18} />
                       </button>
-                      <FiChevronRight color="var(--muted)" />
+                      <button onClick={(e) => deletarExercicio(ex.id, e)} style={{ color: isDuplicate ? 'rgba(255,255,255,0.8)' : '#ff5f5f' }}>
+                        <FiTrash2 size={18} />
+                      </button>
+                      <FiChevronRight color={isDuplicate ? '#fff' : "var(--muted)"} />
                     </Flex>
                   )
                 )}
@@ -462,6 +510,11 @@ const Biblioteca = () => {
             <Typography.Body>Nenhum exercício encontrado.</Typography.Body>
           </div>
         )}
+
+        <ConfirmModal
+          {...modalConfig}
+          onCancel={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        />
       </Container>
     </AppShell>
   );

@@ -110,6 +110,7 @@ export const Card = styled.div`
 
 export const Container = styled.div`
   padding: 20px;
+  padding-bottom: 80px;
   width: 100%;
 `;
 

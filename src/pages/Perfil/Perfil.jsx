@@ -141,13 +141,17 @@ const Perfil = () => {
                             <span className="label">Peso ({dados?.unidadePeso || 'kg'})</span>
                         </StatItem>
                         <StatItem>
+                            <span className="value">{dados?.metaPeso || '--'}</span>
+                            <span className="label">Meta ({dados?.unidadePeso || 'kg'})</span>
+                        </StatItem>
+                        <StatItem>
                             <span className="value">{dados?.altura || '--'}</span>
                             <span className="label">Altura ({dados?.unidadeAltura || 'cm'})</span>
                         </StatItem>
-                        <StatItem>
+                        {/* <StatItem>
                             <span className="value">{dados?.idade || '--'}</span>
                             <span className="label">Idade (Anos)</span>
-                        </StatItem>
+                        </StatItem> */}
                         <StatItem style={{ border: '1px solid var(--primary)' }}>
                             <span className="value">{dados?.imc || '--'}</span>
                             <span className="label">IMC ({dados?.statusImc || 'Calculando...'})</span>

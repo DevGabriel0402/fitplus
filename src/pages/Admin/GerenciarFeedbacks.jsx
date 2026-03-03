@@ -7,6 +7,7 @@ import { Container, Typography, Card, Flex } from '../../ui/components/BaseUI';
 import { db } from '../../firebase/firestore';
 import { collection, query, getDocs, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
+import { ConfirmModal } from '../../ui/components/ConfirmModal';
 
 const FeedbackCard = styled(Card)`
   padding: 20px;
@@ -25,6 +26,7 @@ const GerenciarFeedbacks = () => {
     const navigate = useNavigate();
     const [feedbacks, setFeedbacks] = useState([]);
     const [carregando, setCarregando] = useState(true);
+    const [modalConfig, setModalConfig] = useState({ isOpen: false });
 
     const fetchFeedbacks = async () => {
         try {
@@ -41,14 +43,22 @@ const GerenciarFeedbacks = () => {
     };
 
     const deletarFeedback = async (id) => {
-        if (!window.confirm("Deseja deletar este feedback?")) return;
-        try {
-            await deleteDoc(doc(db, 'feedbacks', id));
-            setFeedbacks(feedbacks.filter(f => f.id !== id));
-            toast.success("Feedback removido.");
-        } catch (error) {
-            toast.error("Erro ao deletar.");
-        }
+        setModalConfig({
+            isOpen: true,
+            title: 'Deletar Avaliação',
+            message: 'Tem certeza que deseja apagar este feedback permanentemente?',
+            isDestructive: true,
+            confirmText: 'Deletar',
+            onConfirm: async () => {
+                try {
+                    await deleteDoc(doc(db, 'feedbacks', id));
+                    setFeedbacks(feedbacks.filter(f => f.id !== id));
+                    toast.success("Feedback removido.");
+                } catch (error) {
+                    toast.error("Erro ao deletar.");
+                }
+            }
+        });
     };
 
     useEffect(() => {
@@ -103,6 +113,11 @@ const GerenciarFeedbacks = () => {
                         </FeedbackCard>
                     ))
                 )}
+
+                <ConfirmModal
+                    {...modalConfig}
+                    onCancel={() => setModalConfig({ ...modalConfig, isOpen: false })}
+                />
             </Container>
         </AppShell>
     );
