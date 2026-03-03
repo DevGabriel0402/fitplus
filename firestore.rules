@@ -43,6 +43,7 @@ service cloud.firestore {
     match /notificacoes/{userId}/{document=**} { allow read, write: if isOwner(userId) || isAdmin(); }
     match /treinos_historico/{userId}/{document=**} { allow read, write: if isOwner(userId) || isAdmin(); }
     match /banco_horas/{userId}/{document=**} { allow read, write: if isOwner(userId) || isAdmin(); }
+    match /usuarios/{userId}/diario_nutricao/{document=**} { allow read, write: if isOwner(userId) || isAdmin(); }
 
     // Conteúdo Gerenciado: Leitura pública, Escrita Admin
     match /treinos_sugeridos/{docId} {

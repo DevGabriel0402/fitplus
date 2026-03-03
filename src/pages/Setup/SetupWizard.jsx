@@ -24,6 +24,7 @@ const SetupContainer = styled(Container)`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  overflow-y: auto;
 `;
 
 const ProgressBar = styled.div`

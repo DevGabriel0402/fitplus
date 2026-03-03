@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { NavLink, useNavigate, Link } from 'react-router-dom';
-import { FiHome, FiActivity, FiStar, FiBell, FiUser, FiSearch, FiLogOut, FiBookOpen, FiShield } from 'react-icons/fi';
+import { FiHome, FiActivity, FiStar, FiBell, FiUser, FiSearch, FiLogOut, FiBookOpen, FiShield, FiPieChart } from 'react-icons/fi';
 
 import * as IconsFa from 'react-icons/fa';
 const { FaDumbbell } = IconsFa;
@@ -215,6 +215,7 @@ export const AppShell = ({ children, hideTabbar = false }) => {
   const menuItems = [
     { to: "/home", icon: <FiHome />, label: "Home" },
     { to: "/workouts", icon: <FiActivity />, label: "Treinos" },
+    { to: "/nutricao", icon: <FiPieChart />, label: "Nutrição" },
     { to: "/perfil", icon: <FiUser />, label: "Perfil" },
   ];
 

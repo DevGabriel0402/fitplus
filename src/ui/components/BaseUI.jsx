@@ -133,6 +133,11 @@ export const Typography = {
     font-weight: 600;
     margin-bottom: 8px;
   `,
+  H3: styled.h3`
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  `,
   Body: styled.p`
     font-size: 16px;
     color: var(--muted);

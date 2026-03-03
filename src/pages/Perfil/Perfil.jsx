@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { FiUser, FiHeart, FiShield, FiSettings, FiHelpCircle, FiLogOut, FiChevronRight, FiEdit2 } from 'react-icons/fi';
@@ -7,6 +7,8 @@ import { Container, Typography, Card, Flex } from '../../ui/components/BaseUI';
 import { useUsuario } from '../../hooks/useUsuario';
 import { useAuth } from '../../contexts/AuthContexto';
 import { deslogar } from '../../firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../firebase/firestore';
 
 const ProfileHeader = styled.div`
   display: flex;
@@ -67,8 +69,8 @@ const StatItem = styled.div`
   border-radius: 12px;
   border: 1px solid var(--border);
 
-  .value { font-weight: 800; font-size: 16px; color: var(--primary); }
-  .label { font-size: 10px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .value { font-weight: 800; font-size: 16px; color: var(--primary); text-align: center; }
+  .label { font-size: 10px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
 `;
 
 const MenuList = styled.div`
@@ -95,6 +97,25 @@ const Perfil = () => {
     const { dados, carregando } = useUsuario();
     const { usuario, dadosUsuario } = useAuth();
     const navigate = useNavigate();
+    const [caloriasHoje, setCaloriasHoje] = useState(0);
+
+    useEffect(() => {
+        const fetchCaloriasDeHoje = async () => {
+            if (usuario?.uid) {
+                const dateStr = new Date().toISOString().split('T')[0];
+                const docRef = doc(db, `usuarios/${usuario.uid}/diario_nutricao`, dateStr);
+                try {
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists() && docSnap.data().calorias) {
+                        setCaloriasHoje(docSnap.data().calorias);
+                    }
+                } catch (error) {
+                    console.error("Erro ao carregar calorias:", error);
+                }
+            }
+        };
+        fetchCaloriasDeHoje();
+    }, [usuario]);
 
     const handleLogout = async () => {
         await deslogar();
@@ -130,6 +151,14 @@ const Perfil = () => {
                         <StatItem style={{ border: '1px solid var(--primary)' }}>
                             <span className="value">{dados?.imc || '--'}</span>
                             <span className="label">IMC ({dados?.statusImc || 'Calculando...'})</span>
+                        </StatItem>
+                        <StatItem style={{ border: '1px solid var(--primary)' }}>
+                            <span className="value">{dados?.proteinaDiaria ? `${dados.proteinaDiaria}g` : '--'}</span>
+                            <span className="label">Proteína / dia</span>
+                        </StatItem>
+                        <StatItem style={{ border: '1px solid var(--primary)' }}>
+                            <span className="value">{caloriasHoje} kcal</span>
+                            <span className="label">Consumido Hoje</span>
                         </StatItem>
                     </StatsGrid>
                 </ProfileHeader>

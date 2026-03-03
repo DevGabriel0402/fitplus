@@ -20,7 +20,7 @@ const spin = keyframes`
 const Container = styled.div`
   height: 100vh;
   width: 100%;
-  background-color: var(--bg);
+  background-color: ${({ theme }) => theme.colors.bg};
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -30,7 +30,7 @@ const Container = styled.div`
 
 const IconWrapper = styled(motion.div)`
   font-size: 80px;
-  color: var(--primary);
+  color: ${({ theme }) => theme.colors.primary};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -40,8 +40,8 @@ const IconWrapper = styled(motion.div)`
 const Spinner = styled.div`
   width: 40px;
   height: 40px;
-  border: 4px solid rgba(var(--primary-rgb), 0.1);
-  border-top: 4px solid var(--primary);
+  border: 4px solid ${({ theme }) => theme.colors.border};
+  border-top: 4px solid ${({ theme }) => theme.colors.primary};
   border-radius: 50%;
   animation: ${spin} 1s linear infinite;
   margin-top: 20px;
@@ -50,7 +50,7 @@ const Spinner = styled.div`
 const LogoText = styled(motion.h1)`
   font-size: 28px;
   font-weight: 800;
-  color: var(--primary);
+  color: ${({ theme }) => theme.colors.primary};
   letter-spacing: 4px;
   text-transform: uppercase;
 `;

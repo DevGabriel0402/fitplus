@@ -12,6 +12,7 @@ import Home from '../pages/Home/Home';
 import Workouts from '../pages/Workouts/Workouts';
 import Biblioteca from '../pages/biblioteca/Biblioteca';
 import Favoritos from '../pages/Favoritos/Favoritos';
+import Nutricao from '../pages/Nutricao/Nutricao';
 import Notificacoes from '../pages/Notificacoes/Notificacoes';
 import Perfil from '../pages/Perfil/Perfil';
 import EditPerfil from '../pages/Perfil/EditPerfil';
@@ -138,6 +139,12 @@ export const Rotas = () => {
             <Route path="/notificacoes" element={
                 <RotaPrivada>
                     <Notificacoes />
+                </RotaPrivada>
+            } />
+
+            <Route path="/nutricao" element={
+                <RotaPrivada>
+                    <Nutricao />
                 </RotaPrivada>
             } />
 

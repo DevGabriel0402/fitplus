@@ -18,6 +18,7 @@ const AuthContainer = styled(Container)`
   flex-direction: column;
   min-height: 100vh;
   justify-content: center;
+  overflow-y: auto;
 `;
 
 const BackButton = styled.button`

@@ -33,7 +33,7 @@ export default function Login() {
           </div>
         </Topo>
 
-        <BotaoPrimario onClick={handleEntrar} disabled={carregando}>
+        <BotaoPrimario onClick={handleEntrar} disabled={carregando} style={{ backgroundColor: '#CB1313' }} >
           {carregando ? "Entrando..." : "Entrar anonimamente"}
         </BotaoPrimario>
 
@@ -79,7 +79,7 @@ const Logo = styled.div`
   place-items: center;
   font-weight: 900;
   color: white;
-  background: ${({ theme }) => theme.cores.azul};
+  background: ${({ theme }) => theme.colors.primary};
   box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
 `;
 
@@ -91,7 +91,7 @@ const Titulo = styled.h1`
 
 const Subtitulo = styled.p`
   margin: 4px 0 0;
-  color: ${({ theme }) => theme.cores.textoSuave};
+  color: ${({ theme }) => theme.colors.muted};
   font-size: 13px;
 `;
 
@@ -99,13 +99,13 @@ const BotaoPrimario = styled.button`
   width: 100%;
   padding: 12px 14px;
   border-radius: ${({ theme }) => theme.raio.md};
-  border: 1px solid ${({ theme }) => theme.cores.azul};
-  background: ${({ theme }) => theme.cores.azul};
+  border: 1px solid ${({ theme }) => theme.colors.primary};
+  background: ${({ theme }) => theme.colors.primary} !important;
   color: white;
   font-weight: 900;
   cursor: pointer;
 
-  &:hover { background: ${({ theme }) => theme.cores.azulHover}; }
+  &:hover { background: ${({ theme }) => theme.colors.primaryHover} !important; }
 
   &:disabled {
     opacity: 0.6;

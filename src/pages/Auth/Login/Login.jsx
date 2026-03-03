@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiMail, FiLock, FiArrowLeft } from 'react-icons/fi';
+import { FiMail, FiLock, FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
 import toast from 'react-hot-toast';
 import { loginComEmail, loginComGoogle } from '../../../firebase/auth';
@@ -21,13 +21,14 @@ const AuthContainer = styled(Container)`
   flex-direction: column;
   min-height: 100vh;
   justify-content: center;
+  overflow-y: auto;
 `;
 
 const BackButton = styled.button`
   position: absolute;
   top: 50px;
   left: 20px;
-  color: var(--text);
+  color: ${({ theme }) => theme.colors.text};
   font-size: 24px;
 `;
 
@@ -48,15 +49,34 @@ const Divider = styled.div`
 `;
 
 const LinkText = styled(Link)`
-  color: var(--primary);
+  color: ${({ theme }) => theme.colors.primary};
   font-weight: 600;
   font-size: 14px;
+`;
+
+const PasswordWrapper = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const EyeButton = styled.button`
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
 `;
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     const [loading, setLoading] = useState(false);
+    const [mostrarSenha, setMostrarSenha] = useState(false);
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
@@ -85,7 +105,7 @@ const Login = () => {
     };
 
     return (
-        <AuthContainer>
+        <AuthContainer style={{ backgroundColor: "#fafafa", maxWidth: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <BackButton onClick={() => navigate(-1)}>
                 <FiArrowLeft />
             </BackButton>
@@ -93,7 +113,7 @@ const Login = () => {
             <Typography.H1>Entrar</Typography.H1>
             <Typography.Body>Bem-vindo de volta! Por favor, insira seus dados.</Typography.Body>
 
-            <form onSubmit={handleLogin} style={{ marginTop: '40px' }}>
+            <form onSubmit={handleLogin} style={{ marginTop: '40px', width: "100%", maxWidth: 400 }}>
                 <InputWrapper>
                     <Label>E-mail</Label>
                     <InputField
@@ -107,32 +127,37 @@ const Login = () => {
 
                 <InputWrapper>
                     <Label>Senha</Label>
-                    <InputField
-                        type="password"
-                        placeholder="••••••••"
-                        value={senha}
-                        onChange={(e) => setSenha(e.target.value)}
-                        required
-                    />
+                    <PasswordWrapper>
+                        <InputField
+                            type={mostrarSenha ? 'text' : 'password'}
+                            placeholder="••••••••"
+                            value={senha}
+                            onChange={(e) => setSenha(e.target.value)}
+                            required
+                        />
+                        <EyeButton type="button" onClick={() => setMostrarSenha(!mostrarSenha)}>
+                            {mostrarSenha ? <FiEyeOff /> : <FiEye />}
+                        </EyeButton>
+                    </PasswordWrapper>
                 </InputWrapper>
 
-                <Flex justify="flex-end" style={{ marginBottom: '30px' }}>
+                <Flex $justify="flex-end" style={{ marginBottom: '30px' }}>
                     <LinkText to="/esqueci-senha">Esqueceu a senha?</LinkText>
                 </Flex>
 
-                <BotaoPrimario type="submit" disabled={loading}>
+                <BotaoPrimario type="submit" disabled={loading} style={{ backgroundColor: "#CB1313", color: "#fafafa" }}>
                     {loading ? 'Entrando...' : 'Entrar'}
                 </BotaoPrimario>
             </form>
 
             <Divider>ou continue com</Divider>
 
-            <BotaoSecundario onClick={handleGoogle}>
+            <BotaoSecundario onClick={handleGoogle} style={{ backgroundColor: "#fafafa", color: "#000" }}>
                 <FcGoogle size={24} />
                 Google
             </BotaoSecundario>
 
-            <Flex justify="center" style={{ marginTop: '40px' }}>
+            <Flex $justify="center" style={{ marginTop: '40px' }}>
                 <Typography.Small>Não tem uma conta?</Typography.Small>
                 <LinkText to="/cadastro" style={{ marginLeft: '5px' }}>Cadastre-se</LinkText>
             </Flex>

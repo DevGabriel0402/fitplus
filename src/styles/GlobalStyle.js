@@ -39,7 +39,7 @@ export const GlobalStyle = createGlobalStyle`
   #root {
     width: 100%;
     min-height: 100vh;
-    background-color: var(--bg);
+    background-color: ${({ theme }) => theme.colors.bg};
     position: relative;
   }
 
@@ -73,12 +73,13 @@ export const GlobalStyle = createGlobalStyle`
   /* Custom Scrollbar */
   ::-webkit-scrollbar {
     width: 4px;
+    background: transparent;
   }
   ::-webkit-scrollbar-track {
-    background: var(--bg);
+    background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: var(--border);
+    background: ${({ theme }) => theme.colors.border};
     border-radius: 10px;
   }
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiArrowLeft } from 'react-icons/fi';
+import { FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
 import toast from 'react-hot-toast';
 import { doc, setDoc } from 'firebase/firestore';
@@ -23,6 +23,7 @@ const AuthContainer = styled(Container)`
   flex-direction: column;
   min-height: 100vh;
   justify-content: center;
+  overflow-y: auto;
 `;
 
 const BackButton = styled.button`
@@ -39,11 +40,30 @@ const LinkText = styled(Link)`
   font-size: 14px;
 `;
 
+const PasswordWrapper = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const EyeButton = styled.button`
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+`;
+
 const Cadastro = () => {
     const [nome, setNome] = useState('');
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     const [loading, setLoading] = useState(false);
+    const [mostrarSenha, setMostrarSenha] = useState(false);
     const navigate = useNavigate();
 
     const handleCadastro = async (e) => {
@@ -104,13 +124,18 @@ const Cadastro = () => {
 
                 <InputWrapper>
                     <Label>Senha</Label>
-                    <InputField
-                        type="password"
-                        placeholder="••••••••"
-                        value={senha}
-                        onChange={(e) => setSenha(e.target.value)}
-                        required
-                    />
+                    <PasswordWrapper>
+                        <InputField
+                            type={mostrarSenha ? 'text' : 'password'}
+                            placeholder="••••••••"
+                            value={senha}
+                            onChange={(e) => setSenha(e.target.value)}
+                            required
+                        />
+                        <EyeButton type="button" onClick={() => setMostrarSenha(!mostrarSenha)}>
+                            {mostrarSenha ? <FiEyeOff /> : <FiEye />}
+                        </EyeButton>
+                    </PasswordWrapper>
                 </InputWrapper>
 
                 <BotaoPrimario type="submit" disabled={loading} style={{ marginTop: '20px' }}>
@@ -118,7 +143,7 @@ const Cadastro = () => {
                 </BotaoPrimario>
             </form>
 
-            <Flex justify="center" style={{ marginTop: '40px' }}>
+            <Flex $justify="center" style={{ marginTop: '40px' }}>
                 <Typography.Small>Já tem uma conta?</Typography.Small>
                 <LinkText to="/login" style={{ marginLeft: '5px' }}>Entrar</LinkText>
             </Flex>

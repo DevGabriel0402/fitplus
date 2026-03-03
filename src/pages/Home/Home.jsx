@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FiActivity, FiUser, FiPlus, FiBookOpen, FiHeart, FiStar, FiX } from 'react-icons/fi';
-import { FaCalculator } from 'react-icons/fa';
+import { FaCalculator, FaDrumstickBite } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAjustes } from '../../contexts/AjustesContexto';
 import { AppShell } from '../../ui/AppShell/AppShell';
@@ -17,7 +17,8 @@ import { db } from '../../firebase/firestore';
 import { useColecao } from '../../hooks/useColecao';
 
 const ShortcutGrid = styled.div`
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 0 20px; margin-bottom: 30px; margin-top: 20px;   
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; padding: 0 20px; margin-bottom: 30px; margin-top: 20px;
+  @media (max-width: 400px) { grid-template-columns: repeat(4, 1fr); }
 `;
 const ShortcutItem = styled.div`
   display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer;
@@ -55,6 +56,7 @@ const ModalOverlay = styled(motion.div)`
 const ModalContent = styled(motion.div)`
   background-color: var(--bg); width: 100%; max-width: 450px;
   border-radius: 24px; padding: 30px; position: relative; border: 1px solid var(--border);
+  max-height: 90vh; overflow-y: auto;
 `;
 
 const IMCModal = ({ isOpen, onClose, userId, initialPeso, initialAltura }) => {
@@ -100,7 +102,7 @@ const IMCModal = ({ isOpen, onClose, userId, initialPeso, initialAltura }) => {
 
   return (
     <AnimatePresence>
-      <ModalOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <ModalOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} >
         <ModalContent initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}>
           <button onClick={onClose} style={{ position: 'absolute', top: '20px', right: '20px', color: 'var(--muted)' }}>
             <FiX size={24} />
@@ -146,6 +148,172 @@ const IMCModal = ({ isOpen, onClose, userId, initialPeso, initialAltura }) => {
   );
 };
 
+const SelectWrapper = styled.div`
+  width: 100%;
+  margin-bottom: 20px;
+`;
+
+const StyledSelect = styled.select`
+  width: 100%;
+  height: 56px;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0 20px;
+  color: var(--text);
+  font-size: 16px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  cursor: pointer;
+
+  &:focus {
+    border-color: var(--primary);
+    outline: none;
+  }
+`;
+
+const ResultGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+`;
+
+const ResultCard = styled.div`
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  text-align: center;
+
+  h4 {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--primary);
+    margin: 4px 0;
+  }
+
+  span {
+    font-size: 11px;
+    color: var(--muted);
+  }
+`;
+
+const ProteinaModal = ({ isOpen, onClose, userId, initialPeso }) => {
+  const [peso, setPeso] = useState(initialPeso || '');
+  const [objetivo, setObjetivo] = useState('manter');
+  const [resultado, setResultado] = useState(null);
+  const [salvando, setSalvando] = useState(false);
+
+  const multiplicadores = {
+    sedentario: { min: 1.2, max: 1.4, label: 'Sedentário' },
+    leve: { min: 1.4, max: 1.6, label: 'Atividade Leve' },
+    manter: { min: 1.6, max: 1.8, label: 'Manter Massa' },
+    ganhar: { min: 1.8, max: 2.2, label: 'Ganhar Massa' },
+    intenso: { min: 2.2, max: 2.5, label: 'Treino Intenso' },
+  };
+
+  const calcular = async () => {
+    if (!peso) return toast.error('Preencha seu peso');
+    const p = parseFloat(peso);
+    const mult = multiplicadores[objetivo];
+    const min = (p * mult.min).toFixed(0);
+    const max = (p * mult.max).toFixed(0);
+    const ideal = (p * ((mult.min + mult.max) / 2)).toFixed(0);
+    const refeicoes = Math.round(parseFloat(ideal) / 30);
+
+    setResultado({ min, max, ideal, refeicoes, label: mult.label });
+
+    if (userId) {
+      setSalvando(true);
+      try {
+        await updateDoc(doc(db, 'usuarios', userId), {
+          proteinaDiaria: ideal,
+          proteinaRange: `${min}-${max}`,
+          objetivoProteina: mult.label,
+          ultimoCalculoProteina: new Date().toISOString()
+        });
+        toast.success('Dados salvos no perfil!');
+      } catch (error) {
+        console.error('Erro ao salvar proteína:', error);
+        toast.error('Calculado, mas erro ao salvar.');
+      } finally {
+        setSalvando(false);
+      }
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <ModalOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        <ModalContent initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}>
+          <button onClick={onClose} style={{ position: 'absolute', top: '20px', right: '20px', color: 'var(--muted)' }}>
+            <FiX size={24} />
+          </button>
+
+          <Typography.H2 style={{ marginBottom: '10px' }}>🥩 Calculadora de Proteína</Typography.H2>
+          <Typography.Body style={{ fontSize: '14px', marginBottom: '25px' }}>
+            Descubra a quantidade ideal de proteína diária para o seu objetivo.
+          </Typography.Body>
+
+          <InputWrapper>
+            <Label>Peso (kg)</Label>
+            <InputField type="number" placeholder="Ex: 80" value={peso} onChange={(e) => setPeso(e.target.value)} />
+          </InputWrapper>
+
+          <SelectWrapper>
+            <Label>Objetivo</Label>
+            <StyledSelect value={objetivo} onChange={(e) => setObjetivo(e.target.value)}>
+              <option value="sedentario">Sedentário — pouca atividade</option>
+              <option value="leve">Atividade Leve — 2-3x/semana</option>
+              <option value="manter">Manter Massa — 3-5x/semana</option>
+              <option value="ganhar">Ganhar Massa — 4-6x/semana</option>
+              <option value="intenso">Treino Intenso — 6-7x/semana</option>
+            </StyledSelect>
+          </SelectWrapper>
+
+          {resultado && (
+            <>
+              <ResultGrid>
+                <ResultCard>
+                  <span>Ideal / dia</span>
+                  <h4>{resultado.ideal}g</h4>
+                  <span>de proteína</span>
+                </ResultCard>
+                <ResultCard>
+                  <span>Refeições</span>
+                  <h4>{resultado.refeicoes}x</h4>
+                  <span>~30g cada</span>
+                </ResultCard>
+              </ResultGrid>
+              <Card style={{ marginBottom: '20px', textAlign: 'center', border: '1px solid var(--primary)' }}>
+                <Typography.Small>Faixa recomendada</Typography.Small>
+                <Typography.H2 style={{ color: 'var(--primary)', margin: '4px 0' }}>{resultado.min}g — {resultado.max}g</Typography.H2>
+                <Typography.Small>Para objetivo: {resultado.label}</Typography.Small>
+              </Card>
+            </>
+          )}
+
+          <BotaoPrimario onClick={calcular} disabled={salvando}>
+            {salvando ? 'Salvando...' : (resultado ? 'Recalcular e Salvar' : 'Calcular e Salvar')}
+          </BotaoPrimario>
+
+          <button
+            onClick={onClose}
+            style={{ width: '100%', marginTop: '15px', padding: '10px', color: 'var(--muted)', fontSize: '14px', fontWeight: '600' }}
+          >
+            Fechar
+          </button>
+        </ModalContent>
+      </ModalOverlay>
+    </AnimatePresence>
+  );
+};
+
 const Home = () => {
   const { dados, carregando: userLoading } = useUsuario();
   const { usuario } = useAuth();
@@ -155,6 +323,7 @@ const Home = () => {
   const [artigos, setArtigos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalImcAberto, setModalImcAberto] = useState(false);
+  const [modalProteinaAberto, setModalProteinaAberto] = useState(false);
 
   const { documentos: listaFavs } = useColecao(usuario ? `favoritos/${usuario.uid}/itens` : null);
   const isFavorito = (id) => listaFavs.some(f => f.id === id);
@@ -208,6 +377,12 @@ const Home = () => {
         initialPeso={dados?.peso}
         initialAltura={dados?.altura}
       />
+      <ProteinaModal
+        isOpen={modalProteinaAberto}
+        onClose={() => setModalProteinaAberto(false)}
+        userId={usuario?.uid}
+        initialPeso={dados?.peso}
+      />
 
       <ShortcutGrid>
         <ShortcutItem onClick={() => navigate('/workouts/novo')}>
@@ -217,6 +392,10 @@ const Home = () => {
         <ShortcutItem onClick={() => setModalImcAberto(true)}>
           <div className="icon" style={{ color: '#00c2ff' }}><FaCalculator /></div>
           <span>Calc. IMC</span>
+        </ShortcutItem>
+        <ShortcutItem onClick={() => setModalProteinaAberto(true)}>
+          <div className="icon" style={{ color: '#4CAF50' }}><FaDrumstickBite /></div>
+          <span>Proteína</span>
         </ShortcutItem>
         <ShortcutItem onClick={() => navigate('/progresso')}>
           <div className="icon" style={{ color: '#ff8c00' }}><FiActivity /></div>
@@ -259,7 +438,7 @@ const Home = () => {
 
       <SectionHeader>
         <Typography.H2>Dicas e Artigos</Typography.H2>
-        <Typography.Small style={{ color: 'var(--primary)', cursor: 'pointer' }}>Ver tudo</Typography.Small>
+        <Typography.Small style={{ color: 'var(--primary)', cursor: 'pointer' }} onClick={() => navigate('/biblioteca')}>Ver tudo</Typography.Small>
       </SectionHeader>
 
       <ScrollGrid>

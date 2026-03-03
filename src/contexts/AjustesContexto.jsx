@@ -17,12 +17,17 @@ export const AjustesProvider = ({ children }) => {
     const [carregando, setCarregando] = useState(true);
 
     useEffect(() => {
+        if (ajustes.nomePainel) {
+            document.title = `${ajustes.nomePainel} Fitness | Treinos e Nutrição`;
+        }
+    }, [ajustes.nomePainel]);
+
+    useEffect(() => {
         if (!usuario) {
             setCarregando(false);
             return;
         }
 
-        // Escutar mudanças em tempo real nos ajustes do usuário
         const docRef = doc(db, 'usuarios', usuario.uid);
         const unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
