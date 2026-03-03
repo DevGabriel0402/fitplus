@@ -14,7 +14,7 @@ const ShellContainer = styled.div`
   display: flex;
   height: 100vh;
   width: 100%;
-  background-color: var(--bg);
+  background-color: ${({ theme }) => theme.colors.bg};
   position: relative;
   overflow: hidden;
 
@@ -25,13 +25,14 @@ const ShellContainer = styled.div`
 
 const TopBar = styled.header`
   width: 100%;
-  height: 60px;
-  background-color: var(--surface);
-  border-bottom: 1px solid var(--border);
+  height: 100px;
+  background-color: ${({ theme }) => theme.colors.surface};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: end;
   justify-content: space-between;
-  padding: 25px;
+  padding: 10px;
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -41,6 +42,7 @@ const TopBar = styled.header`
   @media (max-width: 768px) {
     height: 100px;
     padding: 15px;
+    flex-direction: row;
   }
 `;
 
