@@ -202,9 +202,9 @@ const ExecucaoTreino = () => {
 
     // Bloqueador de navegação interna (React Router)
     const blocker = useBlocker(
-        ({ currentValue, nextLocation }) =>
+        ({ currentLocation, nextLocation }) =>
             !showFeedback && // Não bloqueia se já estiver na tela de feedback final
-            currentValue.pathname !== nextLocation.pathname
+            currentLocation?.pathname !== nextLocation?.pathname
     );
 
     // Efeito para abrir o modal quando a navegação é bloqueada
