@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useBlocker } from 'react-router-dom';
 import { FiArrowLeft, FiClock } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -198,6 +198,62 @@ const ExecucaoTreino = () => {
     const [comentario, setComentario] = useState('');
     const [enviandoFeedback, setEnviandoFeedback] = useState(false);
     const [timerOpen, setTimerOpen] = useState(false);
+    const [showNavGuard, setShowNavGuard] = useState(false);
+
+    // Bloqueador de navegação interna (React Router)
+    const blocker = useBlocker(
+        ({ currentValue, nextLocation }) =>
+            !showFeedback && // Não bloqueia se já estiver na tela de feedback final
+            currentValue.pathname !== nextLocation.pathname
+    );
+
+    // Efeito para abrir o modal quando a navegação é bloqueada
+    useEffect(() => {
+        if (blocker.state === "blocked") {
+            setShowNavGuard(true);
+        }
+    }, [blocker.state]);
+
+    // Detector de mudança de aba/visibilidade
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && !showFeedback) {
+                // Ao voltar para a aba, verifica se o treino ainda é o mesmo
+                setShowNavGuard(true);
+            }
+        };
+
+        const handleBeforeUnload = (e) => {
+            if (!showFeedback) {
+                e.preventDefault();
+                e.returnValue = ''; // Gatilho para o aviso nativo do navegador
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [showFeedback]);
+
+    const handleConfirmExit = () => {
+        setShowNavGuard(false);
+        if (blocker.state === "blocked") {
+            blocker.proceed();
+        } else {
+            navigate('/workouts');
+        }
+    };
+
+    const handleContinueWorkout = () => {
+        setShowNavGuard(false);
+        if (blocker.state === "blocked") {
+            blocker.reset();
+        }
+    };
 
     const finalizarTreino = async () => {
         if (!treino || !treino.exercicios) return;
@@ -337,6 +393,40 @@ const ExecucaoTreino = () => {
                     isMandatory={true}
                     timerKey={`workout_timer_expiry_${usuario.uid}_${id}`}
                 />
+
+                <AnimatePresence>
+                    {showNavGuard && (
+                        <ModalOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ zIndex: 4000 }}>
+                            <ModalContent initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}>
+                                <div style={{ fontSize: '40px', marginBottom: '10px' }}>⚠️</div>
+                                <Typography.H2>Treino em Andamento</Typography.H2>
+                                <Typography.Body style={{ marginBottom: '25px', opacity: 0.8 }}>
+                                    Você deseja continuar o treino atual ou finalizar agora?
+                                </Typography.Body>
+
+                                <Flex $flexDir="column" $gap="12px">
+                                    <BotaoPrimario onClick={handleContinueWorkout} style={{ width: '100%' }}>
+                                        Continuar Treinando
+                                    </BotaoPrimario>
+                                    <button
+                                        onClick={handleConfirmExit}
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            color: 'var(--muted)',
+                                            fontSize: '14px',
+                                            padding: '10px',
+                                            cursor: 'pointer',
+                                            fontWeight: '600'
+                                        }}
+                                    >
+                                        Abandonar / Finalizar
+                                    </button>
+                                </Flex>
+                            </ModalContent>
+                        </ModalOverlay>
+                    )}
+                </AnimatePresence>
 
                 <AnimatePresence>
                     {showFeedback && (
