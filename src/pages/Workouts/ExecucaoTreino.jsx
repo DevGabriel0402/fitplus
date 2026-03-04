@@ -12,6 +12,7 @@ import { useAuth } from '../../contexts/AuthContexto';
 import { useColecao } from '../../hooks/useColecao';
 import { treinosSugeridos } from '../../data/sugestoes';
 import toast from 'react-hot-toast';
+import WorkoutTimer from '../../ui/components/WorkoutTimer/WorkoutTimer';
 
 const ExerciseStage = styled(Card)`
   margin-top: 30px;
@@ -31,7 +32,7 @@ const SetBadge = styled.button`
   height: 50px;
   border-radius: 50%;
   background-color: ${({ $completed }) => ($completed ? 'var(--primary)' : 'var(--surface)')};
-  color: ${({ $completed }) => ($completed ? '#000' : 'var(--text)')};
+  color: ${({ $completed }) => ($completed ? '#FFF' : 'var(--text)')};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -126,6 +127,19 @@ const ExecucaoTreino = () => {
 
             setInicioTimestamp(startTime);
             setSegundos(Math.floor((Date.now() - startTime) / 1000));
+
+            // Detector de Timer ativo (Persistência)
+            const workoutTimerKey = `workout_timer_expiry_${usuario.uid}_${id}`;
+            const savedExpiry = localStorage.getItem(workoutTimerKey);
+            if (savedExpiry) {
+                const remaining = Math.round((parseInt(savedExpiry) - Date.now()) / 1000);
+                if (remaining > 0) {
+                    setTimerOpen(true);
+                } else {
+                    localStorage.removeItem(workoutTimerKey);
+                    localStorage.removeItem(workoutTimerKey + '_total');
+                }
+            }
         }
     }, [loading, treino, id, usuario, inicioTimestamp]);
 
@@ -160,13 +174,30 @@ const ExecucaoTreino = () => {
 
     const toggleSet = (setIdx) => {
         const key = `${indexExercicio}-${setIdx}`;
-        setSetsCompletos(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+        const alreadyCompleted = setsCompletos.includes(key);
+
+        // Se já estiver completo, não faz nada (não pode desmarcar)
+        if (alreadyCompleted) return;
+
+        // Verifica se a série anterior (se houver) já está completa
+        if (setIdx > 0) {
+            const previousKey = `${indexExercicio}-${setIdx - 1}`;
+            if (!setsCompletos.includes(previousKey)) {
+                toast.error(`Complete a série ${setIdx} primeiro!`);
+                return;
+            }
+        }
+
+        // Marca como completo
+        setSetsCompletos(prev => [...prev, key]);
+        setTimerOpen(true);
     };
 
     const [showFeedback, setShowFeedback] = useState(false);
     const [rating, setRating] = useState(5);
     const [comentario, setComentario] = useState('');
     const [enviandoFeedback, setEnviandoFeedback] = useState(false);
+    const [timerOpen, setTimerOpen] = useState(false);
 
     const finalizarTreino = async () => {
         if (!treino || !treino.exercicios) return;
@@ -267,9 +298,26 @@ const ExecucaoTreino = () => {
                     <Typography.H1 style={{ marginTop: '10px', fontSize: '28px' }}>{exAtual.nome}</Typography.H1>
                     <Typography.Body>{exAtual.reps} Repetições • {exAtual.peso || '0'} kg</Typography.Body>
                     <SetCounter>
-                        {[...Array(Number(exAtual.series || 3))].map((_, i) => (
-                            <SetBadge key={i} $completed={setsCompletos.includes(`${indexExercicio}-${i}`)} onClick={() => toggleSet(i)}>{i + 1}</SetBadge>
-                        ))}
+                        {[...Array(Number(exAtual.series || 3))].map((_, i) => {
+                            const isCompleted = setsCompletos.includes(`${indexExercicio}-${i}`);
+                            const isPreviousCompleted = i === 0 || setsCompletos.includes(`${indexExercicio}-${i - 1}`);
+                            const isDisabled = isCompleted || !isPreviousCompleted;
+
+                            return (
+                                <SetBadge
+                                    key={i}
+                                    $completed={isCompleted}
+                                    onClick={() => toggleSet(i)}
+                                    disabled={isDisabled}
+                                    style={{
+                                        opacity: isDisabled && !isCompleted ? 0.4 : 1,
+                                        cursor: isDisabled ? 'default' : 'pointer'
+                                    }}
+                                >
+                                    {i + 1}
+                                </SetBadge>
+                            );
+                        })}
                     </SetCounter>
                 </ExerciseStage>
 
@@ -279,6 +327,16 @@ const ExecucaoTreino = () => {
                         {indexExercicio === treino.exercicios.length - 1 ? 'Finalizar' : 'Próximo'}
                     </BotaoPrimario>
                 </Flex>
+
+
+                <WorkoutTimer
+                    isOpen={timerOpen}
+                    onClose={() => setTimerOpen(false)}
+                    defaultSeconds={exAtual?.descanso || 60}
+                    autoStart={true}
+                    isMandatory={true}
+                    timerKey={`workout_timer_expiry_${usuario.uid}_${id}`}
+                />
 
                 <AnimatePresence>
                     {showFeedback && (
@@ -313,7 +371,7 @@ const ExecucaoTreino = () => {
                     )}
                 </AnimatePresence>
             </Container>
-        </AppShell>
+        </AppShell >
     );
 };
 

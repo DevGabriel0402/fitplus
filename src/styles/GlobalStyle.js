@@ -87,4 +87,19 @@ export const GlobalStyle = createGlobalStyle`
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
+
+  /* Global Color Fix for Red Buttons */
+  button[style*="background-color: #ff5f5f"],
+  button[style*="background-color: red"],
+  button[style*="background: #ff5f5f"],
+  button[style*="background: red"],
+  .btn-red {
+    color: #FFFFFF !important;
+  }
+  
+  /* Ensuring Primary Red also has white text if used as background */
+  [style*="background-color: var(--primary)"],
+  [style*="background: var(--primary)"] {
+     color: #FFFFFF !important;
+  }
 `;

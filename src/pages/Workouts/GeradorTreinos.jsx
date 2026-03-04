@@ -197,9 +197,10 @@ const GeradorTreinos = () => {
         nivel: null,
         local: null,
         foco: null,
+        descanso: 60
     });
 
-    const totalSteps = 4;
+    const totalSteps = 5;
 
     const stepsData = [
         {
@@ -258,6 +259,19 @@ const GeradorTreinos = () => {
                 { id: 'quadríceps', emoji: '🦵', title: 'Quadríceps', desc: 'Foco na parte anterior da coxa.' },
                 { id: 'gluteos', emoji: '🍑', title: 'Glúteos e Posterior', desc: 'Cadeia posterior e glúteos.' },
                 { id: 'pernas', emoji: '🦵', title: 'Pernas Completas', desc: 'Treino de perna inteiro.' },
+            ]
+        },
+        {
+            id: 5,
+            name: 'Pausa de Descanso',
+            key: 'descanso',
+            title: 'Quanto tempo de descanso entre as séries?',
+            subtitle: 'O temporizador será configurado automaticamente com este valor.',
+            options: [
+                { id: 30, emoji: '⏱️', title: '30 Segundos', desc: 'Foco em densidade e queima.' },
+                { id: 45, emoji: '⏲️', title: '45 Segundos', desc: 'Equilíbrio clássico para hipertrofia.' },
+                { id: 60, emoji: '🕕', title: '1 Minuto', desc: 'Recuperação padrão para força e volume.' },
+                { id: 90, emoji: '⌛', title: '1.5 Minutos', desc: 'Foco em cargas mais pesadas.' },
             ]
         }
     ];
@@ -403,7 +417,8 @@ const GeradorTreinos = () => {
                             instanceId: `${randomEx.id || Date.now()}-${Math.random()}-${selectedExercises.length}`,
                             series: seriesConfig,
                             reps: repsConfig,
-                            peso: ''
+                            peso: '',
+                            descanso: Number(selections.descanso) || 60
                         });
                     }
                 }

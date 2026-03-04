@@ -174,6 +174,33 @@ const SortableExerciseItem = ({ ex, index, removerExercicio, atualizarExercicio 
                                 style={{ width: '60px' }}
                             />
                         </InputGroup>
+                        <InputGroup>
+                            <span>Descanso</span>
+                            <select
+                                value={ex.descanso || 60}
+                                onChange={(e) => atualizarExercicio(index, 'descanso', Number(e.target.value))}
+                                style={{
+                                    width: '70px',
+                                    height: '32px',
+                                    backgroundColor: 'var(--surface)',
+                                    border: '1px solid var(--border)',
+                                    borderRadius: '6px',
+                                    color: 'var(--text)',
+                                    fontSize: '12px',
+                                    textAlign: 'center',
+                                    fontWeight: '600',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <option value={15}>15s</option>
+                                <option value={30}>30s</option>
+                                <option value={45}>45s</option>
+                                <option value={60}>1 min</option>
+                                <option value={90}>1.5 min</option>
+                                <option value={120}>2 min</option>
+                                <option value={180}>3 min</option>
+                            </select>
+                        </InputGroup>
                     </CompactControls>
                 </ExerciseInfo>
 

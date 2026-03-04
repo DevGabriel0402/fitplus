@@ -5,7 +5,7 @@ import { FiArrowLeft, FiPlus, FiZap, FiEdit2, FiPlay, FiTrash2 } from 'react-ico
 import { AppShell } from '../../ui/AppShell/AppShell';
 import { Container, Typography, Card, Flex, BotaoPrimario } from '../../ui/components/BaseUI';
 import { db } from '../../firebase/firestore';
-import { collection, query, getDocs, doc, getDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, getDocs, doc, getDoc, deleteDoc, orderBy } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../ui/components/ConfirmModal';
 
