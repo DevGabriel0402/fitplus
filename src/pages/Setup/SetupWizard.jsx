@@ -62,7 +62,7 @@ const SelectableCard = styled.div`
   padding: 20px;
   border-radius: var(--radius-medium);
   text-align: center;
-  color: ${({ $active }) => ($active ? '#000' : 'var(--text)')};
+  color: ${({ $active }) => ($active ? '#fff' : 'var(--text)')};
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -98,7 +98,7 @@ const UnitButton = styled.button`
   padding: 8px 16px;
   border-radius: 26px;
   background-color: ${({ $active }) => ($active ? 'var(--primary)' : 'transparent')};
-  color: ${({ $active }) => ($active ? '#000' : 'var(--muted)')};
+  color: ${({ $active }) => ($active ? '#fff' : 'var(--muted)')};
   font-weight: 600;
 `;
 
@@ -315,7 +315,7 @@ const SetupWizard = () => {
                 return (
                     <StepContent style={{ alignItems: 'center', justifyContent: 'center' }}>
                         <div style={{ width: '100px', height: '100px', borderRadius: '50%', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '30px' }}>
-                            <FiCheck size={50} color="#000" />
+                            <FiCheck size={50} color="#fff" />
                         </div>
                         <Typography.H1>Tudo pronto!</Typography.H1>
                         <Typography.Body>Seu plano está sendo preparado para você.</Typography.Body>

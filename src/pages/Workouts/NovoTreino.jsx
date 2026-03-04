@@ -193,7 +193,8 @@ const SortableExerciseItem = ({ ex, index, removerExercicio, atualizarExercicio 
 const NovoTreino = () => {
     const { usuario } = useAuth();
     const navigate = useNavigate();
-    const { id, alunoId } = useParams();
+    const params = useParams();
+    const { id, alunoId } = params;
     const [nomeTreino, setNomeTreino] = useState('');
     const [exercicios, setExercicios] = useState([]);
     const [salvando, setSalvando] = useState(false);

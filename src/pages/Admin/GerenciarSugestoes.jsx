@@ -103,7 +103,7 @@ const GerenciarSugestoes = () => {
                             <SuggestionThumb style={{ backgroundImage: `url(${treino.image})` }} />
                             <div style={{ flex: 1 }}>
                                 <Flex $gap="8px" style={{ marginBottom: '4px' }}>
-                                    <Tag style={{ backgroundColor: treino.tagColor || 'var(--secondary)', color: '#000' }}>
+                                    <Tag style={{ backgroundColor: treino.tagColor || 'var(--secondary)', color: '#fff' }}>
                                         {treino.tag || 'GERAL'}
                                     </Tag>
                                     <Typography.Small>{treino.nivel} • {treino.duracao}</Typography.Small>

@@ -33,7 +33,7 @@ const CategoryTag = styled.span`
   border-radius: 4px;
   text-transform: uppercase;
   background-color: var(--primary);
-  color: #000;
+  color: #fff;
 `;
 
 const GerenciarArtigos = () => {

@@ -142,7 +142,7 @@ const GerenciarSolicitacoes = () => {
                                     {!isResolvido && (
                                         <>
                                             <IconButton
-                                                $bg="var(--primary)" $color="#000"
+                                                $bg="var(--primary)" $color="#fff"
                                                 onClick={() => navigate(`/admin/usuarios/${solic.userId}`)}
                                                 style={{ flex: 1 }}
                                             >

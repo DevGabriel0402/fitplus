@@ -45,7 +45,7 @@ const CategoryScroll = styled.div`
 const Chip = styled.div`
   padding: 8px 16px;
   background-color: ${({ $active }) => ($active ? 'var(--primary)' : 'var(--card)')};
-  color: ${({ $active }) => ($active ? '#000' : 'var(--text)')};
+  color: ${({ $active }) => ($active ? '#fff' : 'var(--text)')};
   border-radius: 20px;
   font-size: 14px;
   font-weight: 600;
@@ -111,7 +111,7 @@ const SelectionBadge = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #000;
+  color: #fff;
 `;
 
 const ModalOverlay = styled(motion.div)`

@@ -47,7 +47,7 @@ const StatusBtn = styled.button`
 
   &:hover {
     background: ${props => props.$active ? '#ff5f5f' : '#4caf50'};
-    color: #000;
+    color: #fff;
   }
 `;
 
@@ -133,7 +133,7 @@ const GerenciarUsuarios = () => {
                                 </div>
                                 <Flex $gap="5px">
                                     {user.role === 'admin' && (
-                                        <Badge $bg="var(--primary)" $color="#000">
+                                        <Badge $bg="var(--primary)" $color="#fff">
                                             <FiShield size={10} /> ADMIN
                                         </Badge>
                                     )}
@@ -166,7 +166,7 @@ const GerenciarUsuarios = () => {
                                         </StatusBtn>
                                         <StatusBtn
                                             $active={false}
-                                            style={{ backgroundColor: 'var(--primary)', color: '#000', border: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}
+                                            style={{ backgroundColor: 'var(--primary)', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}
                                             onClick={() => navigate(`/admin/usuarios/${user.id}`)}
                                         >
                                             <FiFileText size={14} /> Ficha

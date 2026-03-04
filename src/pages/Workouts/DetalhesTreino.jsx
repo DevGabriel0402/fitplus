@@ -75,7 +75,8 @@ const ActionArea = styled.div`
 import { useColecao } from '../../hooks/useColecao';
 
 const DetalhesTreino = () => {
-    const { id } = useParams();
+    const params = useParams();
+    const { id, alunoId } = params;
     const navigate = useNavigate();
     const { usuario } = useAuth();
     const [treino, setTreino] = useState(null);
@@ -86,6 +87,7 @@ const DetalhesTreino = () => {
     useEffect(() => {
         const fetchTreino = async () => {
             let foundTreino = null;
+            const targetUid = alunoId || usuario.uid;
 
             // 1. Tenta buscar no Firestore de sugestões dinâmicas
             try {
@@ -121,9 +123,9 @@ const DetalhesTreino = () => {
                 return;
             }
 
-            // 3. Se ainda não encontrou, busca nos treinos privados do usuário
+            // 3. Se ainda não encontrou, busca nos treinos privados do usuário (ou do aluno se alunoId estiver presente)
             try {
-                const docRef = doc(db, `treinos/${usuario.uid}/lista`, id);
+                const docRef = doc(db, `treinos/${targetUid}/lista`, id);
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     setTreino({ ...docSnap.data(), id: docSnap.id });
@@ -138,7 +140,7 @@ const DetalhesTreino = () => {
         if (usuario && (biblioteca.length > 0 || !id?.startsWith('sug-'))) {
             fetchTreino();
         }
-    }, [id, usuario, biblioteca]);
+    }, [id, alunoId, usuario, biblioteca]);
 
     if (loading && id.startsWith('sug-') && biblioteca.length === 0) {
         return <Container><Typography.Body>Sincronizando biblioteca...</Typography.Body></Container>;

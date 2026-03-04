@@ -134,6 +134,24 @@ export const Rotas = () => {
                 </RotaPrivada>
             } />
 
+            <Route path="/admin/usuarios/:alunoId/treino/:id" element={
+                <RotaPrivada apenasAdmin={true}>
+                    <DetalhesTreino />
+                </RotaPrivada>
+            } />
+
+            <Route path="/admin/usuarios/:alunoId/editar-treino/:id" element={
+                <RotaPrivada apenasAdmin={true}>
+                    <NovoTreino />
+                </RotaPrivada>
+            } />
+
+            <Route path="/admin/usuarios/:alunoId/executar-treino/:id" element={
+                <RotaPrivada apenasAdmin={true}>
+                    <ExecucaoTreino />
+                </RotaPrivada>
+            } />
+
             <Route path="/exercicio/:id" element={
                 <RotaPrivada>
                     <DetalhesExercicio />

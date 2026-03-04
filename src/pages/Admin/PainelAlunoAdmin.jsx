@@ -9,6 +9,9 @@ import { collection, query, getDocs, doc, getDoc, deleteDoc } from 'firebase/fir
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../ui/components/ConfirmModal';
 
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
 const WorkoutGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -61,17 +64,50 @@ const Badge = styled.span`
   margin-right: 10px;
 `;
 
+const TabsWrapper = styled.div`
+  display: flex;
+  background-color: rgba(0,0,0,0.2);
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+`;
+
+const Tab = styled.button`
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: ${({ $active }) => ($active ? 'var(--surface)' : 'transparent')};
+  color: ${({ $active }) => ($active ? 'var(--primary)' : 'var(--muted)')};
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.2s;
+`;
+
+const ActivityItem = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background-color: var(--card);
+  border-radius: 16px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+`;
+
 const PainelAlunoAdmin = () => {
     const navigate = useNavigate();
     const { alunoId } = useParams();
     const [aluno, setAluno] = useState(null);
     const [treinos, setTreinos] = useState([]);
+    const [historico, setHistorico] = useState([]);
     const [carregando, setCarregando] = useState(true);
+    const [tabAtiva, setTabAtiva] = useState('fichas');
     const [modalConfig, setModalConfig] = useState({ isOpen: false });
 
     useEffect(() => {
         const fetchDados = async () => {
             try {
+                setCarregando(true);
                 // Fetch student info
                 const alunoSnap = await getDoc(doc(db, 'usuarios', alunoId));
                 if (alunoSnap.exists()) {
@@ -83,13 +119,15 @@ const PainelAlunoAdmin = () => {
                 }
 
                 // Fetch student workouts
-                const q = query(collection(db, `treinos/${alunoId}/lista`));
-                const treinosSnap = await getDocs(q);
-                const items = treinosSnap.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-                setTreinos(items);
+                const treinosSnap = await getDocs(query(collection(db, `treinos/${alunoId}/lista`)));
+                setTreinos(treinosSnap.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+
+                // Fetch student history
+                const historicoSnap = await getDocs(query(collection(db, `treinos_historico/${alunoId}/lista`), orderBy('data', 'desc')));
+                setHistorico(historicoSnap.docs.map(doc => ({ ...doc.data(), id: doc.id })));
             } catch (error) {
                 console.error("Erro ao carregar dados do aluno:", error);
-                toast.error("Erro ao carregar fichas.");
+                toast.error("Erro ao carregar dados.");
             } finally {
                 setCarregando(false);
             }
@@ -99,6 +137,15 @@ const PainelAlunoAdmin = () => {
             fetchDados();
         }
     }, [alunoId, navigate]);
+
+    const formatarData = (dateString) => {
+        try {
+            const data = new Date(dateString);
+            return format(data, "dd 'de' MMM, HH:mm", { locale: ptBR });
+        } catch (e) {
+            return dateString;
+        }
+    };
 
     const deletarTreino = async (id) => {
         setModalConfig({
@@ -148,42 +195,81 @@ const PainelAlunoAdmin = () => {
                     >
                         <FiPlus /> Ficha Manual
                     </BotaoPrimario>
+                    <BotaoPrimario
+                        onClick={() => navigate(`/admin/usuarios/${alunoId}/gerador-treinos`)}
+                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backgroundColor: 'var(--surface)', color: 'var(--primary)', border: '1px solid var(--primary)' }}
+                    >
+                        <FiZap /> Gerador IA
+                    </BotaoPrimario>
                 </Flex>
 
-                {treinos.length === 0 ? (
-                    <Card style={{ textAlign: 'center', padding: '40px' }}>
-                        <Typography.H2>Nenhum treino cadastrado</Typography.H2>
-                        <Typography.Body>Este aluno ainda não possui fichas. Clique nos botões acima para criar a primeira.</Typography.Body>
-                    </Card>
-                ) : (
-                    <WorkoutGrid>
-                        {treinos.map(treino => (
-                            <WorkoutCard key={treino.id} onClick={() => navigate(`/workouts/editar/${treino.id}`)}>
-                                <WorkoutIcon><FiZap /></WorkoutIcon>
-                                <div style={{ flex: 1 }}>
-                                    <h4 style={{ fontSize: '18px', marginBottom: '6px' }}>{treino.nomeTreino}</h4>
-                                    <Flex $gap="0">
-                                        <Badge>{treino.exercicios?.length || 0} EXERCÍCOS</Badge>
-                                        <Badge>~45 MIN</Badge>
+                <TabsWrapper>
+                    <Tab $active={tabAtiva === 'fichas'} onClick={() => setTabAtiva('fichas')}>Fichas Ativas</Tab>
+                    <Tab $active={tabAtiva === 'historico'} onClick={() => setTabAtiva('historico')}>Histórico de Treinos</Tab>
+                </TabsWrapper>
+
+                {tabAtiva === 'fichas' ? (
+                    treinos.length === 0 ? (
+                        <Card style={{ textAlign: 'center', padding: '40px' }}>
+                            <Typography.H2>Nenhum treino cadastrado</Typography.H2>
+                            <Typography.Body>Este aluno ainda não possui fichas. Clique nos botões acima para criar a primeira.</Typography.Body>
+                        </Card>
+                    ) : (
+                        <WorkoutGrid>
+                            {treinos.map(treino => (
+                                <WorkoutCard key={treino.id} onClick={() => navigate(`/admin/usuarios/${alunoId}/editar-treino/${treino.id}`)}>
+                                    <WorkoutIcon><FiZap /></WorkoutIcon>
+                                    <div style={{ flex: 1 }}>
+                                        <h4 style={{ fontSize: '18px', marginBottom: '6px' }}>{treino.nomeTreino}</h4>
+                                        <Flex $gap="0">
+                                            <Badge>{treino.exercicios?.length || 0} EXERCÍCOS</Badge>
+                                            <Badge>~45 MIN</Badge>
+                                        </Flex>
+                                    </div>
+                                    <Flex $gap="15px">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); navigate(`/admin/usuarios/${alunoId}/editar-treino/${treino.id}`); }}
+                                            style={{ color: 'var(--muted)', fontSize: '20px' }}
+                                        >
+                                            <FiEdit2 />
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); deletarTreino(treino.id); }}
+                                            style={{ color: '#ff5f5f', fontSize: '20px' }}
+                                        >
+                                            <FiTrash2 />
+                                        </button>
                                     </Flex>
-                                </div>
-                                <Flex $gap="15px">
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); navigate(`/workouts/editar/${treino.id}`); }}
-                                        style={{ color: 'var(--muted)', fontSize: '20px' }}
-                                    >
-                                        <FiEdit2 />
-                                    </button>
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); deletarTreino(treino.id); }}
-                                        style={{ color: '#ff5f5f', fontSize: '20px' }}
-                                    >
-                                        <FiTrash2 />
-                                    </button>
-                                </Flex>
-                            </WorkoutCard>
-                        ))}
-                    </WorkoutGrid>
+                                </WorkoutCard>
+                            ))}
+                        </WorkoutGrid>
+                    )
+                ) : (
+                    historico.length === 0 ? (
+                        <Card style={{ textAlign: 'center', padding: '40px' }}>
+                            <Typography.H2>Sem histórico</Typography.H2>
+                            <Typography.Body>Este aluno ainda não concluiu nenhum treino.</Typography.Body>
+                        </Card>
+                    ) : (
+                        <div>
+                            {historico.map((act) => (
+                                <ActivityItem key={act.id}>
+                                    <div style={{ flex: 1 }}>
+                                        <h4 style={{ fontSize: '15px', marginBottom: '4px', fontWeight: '700' }}>{act.nomeTreino}</h4>
+                                        <Typography.Small style={{ fontSize: '12px', opacity: 0.7 }}>
+                                            {formatarData(act.data)} • {Math.floor(act.duracaoSegundos / 60)} min
+                                        </Typography.Small>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <div style={{ color: 'var(--primary)', fontWeight: '800', fontSize: '14px' }}>
+                                            {act.setsCompletosTotal}/{act.totalSetsPrevistos}
+                                        </div>
+                                        <Typography.Small style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: '700', opacity: 0.5 }}>Séries</Typography.Small>
+                                    </div>
+                                </ActivityItem>
+                            ))}
+                        </div>
+                    )
                 )}
                 <ConfirmModal
                     {...modalConfig}

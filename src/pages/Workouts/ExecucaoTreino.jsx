@@ -41,7 +41,8 @@ const SetBadge = styled.button`
 
 const ExecucaoTreino = () => {
     const { usuario, dadosUsuario } = useAuth();
-    const { id } = useParams();
+    const params = useParams();
+    const { id } = params;
     const navigate = useNavigate();
     const [treino, setTreino] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -54,6 +55,9 @@ const ExecucaoTreino = () => {
     // Carregar treino
     useEffect(() => {
         const fetchTreino = async () => {
+            const { alunoId } = params;
+            const targetUid = alunoId || usuario.uid;
+
             // Tenta buscar no Firestore de sugestões primeiro
             let foundTreino = null;
             try {
@@ -85,9 +89,9 @@ const ExecucaoTreino = () => {
                 return;
             }
 
-            // Se ainda não encontrou, busca nos treinos do usuário
+            // Se ainda não encontrou, busca nos treinos do usuário (ou aluno)
             try {
-                const docRef = doc(db, `treinos/${usuario.uid}/lista`, id);
+                const docRef = doc(db, `treinos/${targetUid}/lista`, id);
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     setTreino({ ...docSnap.data(), id: docSnap.id });
@@ -102,7 +106,7 @@ const ExecucaoTreino = () => {
         if (usuario && (biblioteca.length > 0 || !id?.startsWith('sug-'))) {
             fetchTreino();
         }
-    }, [id, usuario, biblioteca]);
+    }, [id, usuario, biblioteca, params]);
 
     // Persistência & Timer
     useEffect(() => {
