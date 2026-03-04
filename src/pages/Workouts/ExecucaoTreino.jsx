@@ -214,11 +214,10 @@ const ExecucaoTreino = () => {
         }
     }, [blocker.state]);
 
-    // Detector de mudança de aba/visibilidade
+    // Detector de mudança de aba/visibilidade e perda de foco
     useEffect(() => {
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible' && !showFeedback) {
-                // Ao voltar para a aba, verifica se o treino ainda é o mesmo
+        const handleTriggerGuard = () => {
+            if (!showFeedback && !showNavGuard) {
                 setShowNavGuard(true);
             }
         };
@@ -226,18 +225,22 @@ const ExecucaoTreino = () => {
         const handleBeforeUnload = (e) => {
             if (!showFeedback) {
                 e.preventDefault();
-                e.returnValue = ''; // Gatilho para o aviso nativo do navegador
+                e.returnValue = '';
             }
         };
 
-        document.addEventListener('visibilitychange', handleVisibilityChange);
+        // visibilitychange detecta troca de aba
+        document.addEventListener('visibilitychange', handleTriggerGuard);
+        // blur detecta quando o usuário clica fora da janela (alt+tab, clicar em outra janela etc)
+        window.addEventListener('blur', handleTriggerGuard);
         window.addEventListener('beforeunload', handleBeforeUnload);
 
         return () => {
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            document.removeEventListener('visibilitychange', handleTriggerGuard);
+            window.removeEventListener('blur', handleTriggerGuard);
             window.removeEventListener('beforeunload', handleBeforeUnload);
         };
-    }, [showFeedback]);
+    }, [showFeedback, showNavGuard]);
 
     const handleConfirmExit = () => {
         setShowNavGuard(false);
@@ -396,8 +399,19 @@ const ExecucaoTreino = () => {
 
                 <AnimatePresence>
                     {showNavGuard && (
-                        <ModalOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ zIndex: 4000 }}>
-                            <ModalContent initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}>
+                        <ModalOverlay
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0 }} // Instantâneo
+                            style={{ zIndex: 4000 }}
+                        >
+                            <ModalContent
+                                initial={{ scale: 1, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 1, opacity: 0 }}
+                                transition={{ duration: 0 }} // Instantâneo
+                            >
                                 <div style={{ fontSize: '40px', marginBottom: '10px' }}>⚠️</div>
                                 <Typography.H2>Treino em Andamento</Typography.H2>
                                 <Typography.Body style={{ marginBottom: '25px', opacity: 0.8 }}>
