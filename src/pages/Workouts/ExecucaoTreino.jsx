@@ -199,13 +199,18 @@ const ExecucaoTreino = () => {
     const [enviandoFeedback, setEnviandoFeedback] = useState(false);
     const [timerOpen, setTimerOpen] = useState(false);
     const [showNavGuard, setShowNavGuard] = useState(false);
+    const [estaFinalizando, setEstaFinalizando] = useState(false);
 
     // Bloqueador de navegação interna (React Router)
-    const blocker = useBlocker(
-        ({ currentLocation, nextLocation }) =>
-            !showFeedback && // Não bloqueia se já estiver na tela de feedback final
-            currentLocation?.pathname !== nextLocation?.pathname
-    );
+    const blocker = useBlocker((tx) => {
+        // NÃO bloqueia se estiver finalizando ou se for a mesma rota
+        if (estaFinalizando || showFeedback) return false;
+
+        const currentPath = tx.currentLocation?.pathname;
+        const nextPath = tx.nextLocation?.pathname;
+
+        return currentPath !== nextPath;
+    });
 
     // Efeito para abrir o modal quando a navegação é bloqueada
     useEffect(() => {
@@ -217,13 +222,13 @@ const ExecucaoTreino = () => {
     // Detector de mudança de aba/visibilidade e perda de foco
     useEffect(() => {
         const handleTriggerGuard = () => {
-            if (!showFeedback && !showNavGuard) {
+            if (!showFeedback && !showNavGuard && !estaFinalizando) {
                 setShowNavGuard(true);
             }
         };
 
         const handleBeforeUnload = (e) => {
-            if (!showFeedback) {
+            if (!showFeedback && !estaFinalizando) {
                 e.preventDefault();
                 e.returnValue = '';
             }
@@ -260,6 +265,9 @@ const ExecucaoTreino = () => {
 
     const finalizarTreino = async () => {
         if (!treino || !treino.exercicios) return;
+
+        // Avisa à trava para deixar navegar
+        setEstaFinalizando(true);
 
         // Se for admin, finaliza sem feedback (opcional)
         if (dadosUsuario?.role?.toLowerCase() === 'admin') {
@@ -311,9 +319,10 @@ const ExecucaoTreino = () => {
 
     const handleEnviarFeedback = async () => {
         setEnviandoFeedback(true);
+        // Garantimos que estaFinalizando é true aqui também
+        setEstaFinalizando(true);
         await salvarTreinoNoHistorico({ nota: rating, comentario });
         setEnviandoFeedback(false);
-        setShowFeedback(false);
     };
 
     if (loading) return <Container><Typography.Body>Carregando...</Typography.Body></Container>;
