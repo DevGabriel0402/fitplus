@@ -1,4 +1,8 @@
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore } from "firebase/firestore";
 import { app } from "./app";
 
-export const db = getFirestore(app);
+// Force long-polling to resolve ERR_QUIC_PROTOCOL_ERROR
+export const db = initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+    useFetchStreams: false
+});
