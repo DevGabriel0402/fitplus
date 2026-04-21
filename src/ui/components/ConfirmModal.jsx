@@ -46,7 +46,7 @@ const IconWrapper = styled.div`
   height: 60px;
   border-radius: 50%;
   background-color: ${(props) => props.$isDestructive ? 'rgba(255, 95, 95, 0.1)' : 'rgba(108, 71, 255, 0.1)'};
-  color: ${(props) => props.$isDestructive ? '#ff5f5f' : 'var(--primary)'};
+  color: ${(props) => props.$isDestructive ? '#8A2BE2' : 'var(--primary)'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -91,7 +91,7 @@ export const ConfirmModal = ({
                             flex: 1,
                             height: '48px',
                             fontSize: '15px',
-                            backgroundColor: isDestructive ? '#ff5f5f' : 'var(--primary)',
+                            backgroundColor: isDestructive ? '#8A2BE2' : 'var(--primary)',
                             boxShadow: isDestructive ? '0 8px 16px rgba(255, 95, 95, 0.2)' : '0 8px 16px rgba(108, 71, 255, 0.2)'
                         }}
                     >

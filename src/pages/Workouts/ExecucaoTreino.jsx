@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useParams, useBlocker } from 'react-router-dom';
-import { FiArrowLeft, FiClock } from 'react-icons/fi';
+import { FiArrowLeft, FiClock, FiChevronRight } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { AppShell } from '../../ui/AppShell/AppShell';
@@ -52,6 +52,8 @@ const ExecucaoTreino = () => {
     const [segundos, setSegundos] = useState(0);
     const [inicioTimestamp, setInicioTimestamp] = useState(null);
     const { documentos: biblioteca } = useColecao('exercicios');
+    const { documentos: minhasFichas } = useColecao(`treinos/${usuario.uid}/lista`);
+    const [timerOpen, setTimerOpen] = useState(false);
 
     // Carregar treino
     useEffect(() => {
@@ -197,9 +199,24 @@ const ExecucaoTreino = () => {
     const [rating, setRating] = useState(5);
     const [comentario, setComentario] = useState('');
     const [enviandoFeedback, setEnviandoFeedback] = useState(false);
-    const [timerOpen, setTimerOpen] = useState(false);
     const [showNavGuard, setShowNavGuard] = useState(false);
     const [estaFinalizando, setEstaFinalizando] = useState(false);
+    const [showSwapModal, setShowSwapModal] = useState(false);
+    const [showSwitchWorkoutModal, setShowSwitchWorkoutModal] = useState(false);
+
+    const trocarExercicio = (novoEx) => {
+        const novosExercicios = [...treino.exercicios];
+        novosExercicios[indexExercicio] = {
+            ...novoEx,
+            series: exAtual.series,
+            reps: exAtual.reps,
+            peso: exAtual.peso,
+            descanso: exAtual.descanso
+        };
+        setTreino({ ...treino, exercicios: novosExercicios });
+        setShowSwapModal(false);
+        toast.success(`Exercício trocado por ${novoEx.nome}`);
+    };
 
     // Bloqueador de navegação interna (React Router)
     const blocker = useBlocker((tx) => {
@@ -341,14 +358,36 @@ const ExecucaoTreino = () => {
     return (
         <AppShell hideTabbar>
             <Container>
-                <Flex $justify="space-between" style={{ marginTop: '20px' }}>
-                    <button onClick={() => navigate('/workouts')}><FiArrowLeft size={24} color="var(--text)" /></button>
-                    <Typography.H2 style={{ margin: 0, fontSize: '18px' }}>{treino.nomeTreino}</Typography.H2>
+                <Flex $justify="space-between" style={{ marginTop: '20px', alignItems: 'center' }}>
+                    <button onClick={() => navigate('/workouts')} style={{ color: 'var(--text)' }}><FiArrowLeft size={24} /></button>
+
+                    <button
+                        onClick={() => setShowSwitchWorkoutModal(true)}
+                        style={{
+                            backgroundColor: 'rgba(var(--primary-rgb), 0.1)',
+                            color: 'var(--primary)',
+                            padding: '6px 12px',
+                            borderRadius: '10px',
+                            fontSize: '11px',
+                            fontWeight: '800',
+                            border: '1px solid var(--primary)',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        🔄 TROCAR TREINO
+                    </button>
+
                     <Flex $gap="5px">
                         <FiClock size={16} color="var(--primary)" />
                         <span style={{ fontWeight: '700' }}>{formatTime(segundos)}</span>
                     </Flex>
                 </Flex>
+
+                <div style={{ textAlign: 'center', marginTop: '5px' }}>
+                    <Typography.Small style={{ opacity: 0.7, fontWeight: '700' }}>
+                        📍 LOCAL: {treino.local || 'Não especificado'}
+                    </Typography.Small>
+                </div>
 
                 <div style={{ textAlign: 'center', margin: '20px 0' }}>
                     <div style={{ width: '100%', height: '10px', backgroundColor: 'var(--surface)', borderRadius: '5px', overflow: 'hidden', marginBottom: '10px' }}>
@@ -364,29 +403,78 @@ const ExecucaoTreino = () => {
                 <ExerciseStage>
                     <Typography.Small style={{ color: 'var(--primary)', letterSpacing: '2px', fontWeight: '800' }}>EXERCÍCIO {indexExercicio + 1} DE {treino.exercicios.length}</Typography.Small>
                     <Typography.H1 style={{ marginTop: '10px', fontSize: '28px' }}>{exAtual.nome}</Typography.H1>
-                    <Typography.Body>{exAtual.reps} Repetições • {exAtual.peso || '0'} kg</Typography.Body>
-                    <SetCounter>
-                        {[...Array(Number(exAtual.series || 3))].map((_, i) => {
-                            const isCompleted = setsCompletos.includes(`${indexExercicio}-${i}`);
-                            const isPreviousCompleted = i === 0 || setsCompletos.includes(`${indexExercicio}-${i - 1}`);
-                            const isDisabled = isCompleted || !isPreviousCompleted;
+                    <Typography.Body>
+                        {exAtual.muscle?.toLowerCase() === 'cardio' || exAtual.categoria?.toLowerCase() === 'cardio'
+                            ? `Duração: ${exAtual.reps}`
+                            : `${exAtual.reps} Repetições • ${exAtual.peso || '0'} kg`}
+                    </Typography.Body>
 
-                            return (
-                                <SetBadge
-                                    key={i}
-                                    $completed={isCompleted}
-                                    onClick={() => toggleSet(i)}
-                                    disabled={isDisabled}
-                                    style={{
-                                        opacity: isDisabled && !isCompleted ? 0.4 : 1,
-                                        cursor: isDisabled ? 'default' : 'pointer'
-                                    }}
-                                >
-                                    {i + 1}
-                                </SetBadge>
-                            );
-                        })}
-                    </SetCounter>
+                    {exAtual.muscle?.toLowerCase() === 'cardio' || exAtual.categoria?.toLowerCase() === 'cardio' ? (
+                        <div style={{ marginTop: '20px' }}>
+                            <BotaoPrimario
+                                onClick={() => {
+                                    setSetsCompletos(prev => [...prev, `${indexExercicio}-0`]);
+                                    if (indexExercicio < treino.exercicios.length - 1) setIndexExercicio(i => i + 1);
+                                    else finalizarTreino();
+                                }}
+                                $active={setsCompletos.includes(`${indexExercicio}-0`)}
+                            >
+                                {setsCompletos.includes(`${indexExercicio}-0`) ? 'Concluído ✓' : 'Marcar como Concluído'}
+                            </BotaoPrimario>
+                        </div>
+                    ) : (
+                        <SetCounter>
+                            {[...Array(Number(exAtual.series || 3))].map((_, i) => {
+                                const isCompleted = setsCompletos.includes(`${indexExercicio}-${i}`);
+                                const isPreviousCompleted = i === 0 || setsCompletos.includes(`${indexExercicio}-${i - 1}`);
+                                const isDisabled = isCompleted || !isPreviousCompleted;
+
+                                return (
+                                    <SetBadge
+                                        key={i}
+                                        $completed={isCompleted}
+                                        onClick={() => toggleSet(i)}
+                                        disabled={isDisabled}
+                                        style={{
+                                            opacity: isDisabled && !isCompleted ? 0.4 : 1,
+                                            cursor: isDisabled ? 'default' : 'pointer'
+                                        }}
+                                    >
+                                        {i + 1}
+                                    </SetBadge>
+                                );
+                            })}
+                        </SetCounter>
+                    )}
+
+                    <button
+                        onClick={() => setShowSwapModal(true)}
+                        style={{
+                            marginTop: '20px',
+                            background: 'none',
+                            border: '1px solid var(--border)',
+                            color: 'var(--muted)',
+                            padding: '8px 15px',
+                            borderRadius: '10px',
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            margin: '20px auto 0'
+                        }}
+                    >
+                        🔄 Trocar Exercício
+                    </button>
+
+                    {/* Step-by-Step Info */}
+                    <div style={{ marginTop: '20px', padding: '10px', borderRadius: '10px', backgroundColor: 'rgba(var(--primary-rgb), 0.05)' }}>
+                        <Typography.Small style={{ fontWeight: '700', color: 'var(--primary)' }}>
+                            PRÓXIMO PASSO: {setsCompletos.filter(s => s.startsWith(`${indexExercicio}-`)).length === Number(exAtual.series || 3)
+                                ? 'Mudar para o próximo exercício'
+                                : `Realizar série ${setsCompletos.filter(s => s.startsWith(`${indexExercicio}-`)).length + 1}`}
+                        </Typography.Small>
+                    </div>
                 </ExerciseStage>
 
                 <Flex $justify="space-between" style={{ marginTop: '40px' }}>
@@ -479,6 +567,110 @@ const ExecucaoTreino = () => {
                                 <BotaoPrimario onClick={handleEnviarFeedback} disabled={enviandoFeedback} style={{ width: '100%' }}>
                                     {enviandoFeedback ? 'Enviando...' : 'Enviar Feedback'}
                                 </BotaoPrimario>
+                            </ModalContent>
+                        </ModalOverlay>
+                    )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                    {showSwapModal && (
+                        <ModalOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                            <ModalContent style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+                                <Flex $justify="space-between" style={{ marginBottom: '20px' }}>
+                                    <Typography.H2 style={{ margin: 0, fontSize: '20px' }}>Trocar Exercício</Typography.H2>
+                                    <button onClick={() => setShowSwapModal(false)} style={{ color: 'var(--muted)' }}>✕</button>
+                                </Flex>
+                                <Typography.Body style={{ fontSize: '14px', marginBottom: '20px', opacity: 0.7 }}>
+                                    Escolha uma alternativa para {exAtual.muscle}:
+                                </Typography.Body>
+                                <Flex style={{ display: "grid", gridTemplateColumns: "1fr" }} $flexDir="column" $gap="10px">
+                                    {(() => {
+                                        const normalize = (text) => text?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "";
+                                        const targetMuscle = normalize(exAtual.muscle || exAtual.categoria);
+                                        
+                                        return biblioteca
+                                            .filter(ex => {
+                                                const exMuscle = normalize(ex.muscle || ex.categoria);
+                                                return (exMuscle.includes(targetMuscle) || targetMuscle.includes(exMuscle)) && ex.id !== exAtual.id;
+                                            })
+                                            .slice(0, 4)
+                                            .map(ex => (
+                                                <Card
+                                                    key={ex.id}
+                                                    onClick={() => trocarExercicio(ex)}
+                                                    style={{
+                                                        display: 'flex',
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
+                                                        gap: '15px',
+                                                        padding: '12px 12px',
+                                                        cursor: 'pointer',
+                                                        textAlign: 'left',
+                                                        borderRadius: '16px',
+                                                        border: '1px solid var(--border)',
+                                                        marginBottom: '4px',
+                                                        width: '90%'
+                                                    }}
+                                                >
+                                                    <img
+                                                        src={ex.gifUrl}
+                                                        alt={ex.nome}
+                                                        style={{ width: '56px', height: '56px', borderRadius: '12px', objectFit: 'cover', backgroundColor: 'var(--background)' }}
+                                                    />
+                                                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                                                        <h4 style={{ fontSize: '15px', fontWeight: '700', margin: 0 }}>{ex.nome}</h4>
+                                                        <Typography.Small style={{ opacity: 0.6, marginTop: '2px' }}>{ex.muscle || ex.categoria}</Typography.Small>
+                                                    </div>
+                                                    <FiChevronRight color="var(--border)" />
+                                                </Card>
+                                            ));
+                                    })()}
+                                    {biblioteca.filter(ex => ex.muscle === exAtual.muscle && ex.id !== exAtual.id).length === 0 && (
+                                        <Typography.Small>Nenhuma alternativa encontrada para este músculo.</Typography.Small>
+                                    )}
+                                </Flex>
+                            </ModalContent>
+                        </ModalOverlay>
+                    )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                    {showSwitchWorkoutModal && (
+                        <ModalOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                            <ModalContent style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+                                <Flex $justify="space-between" style={{ marginBottom: '20px' }}>
+                                    <Typography.H2 style={{ margin: 0, fontSize: '20px' }}>Trocar de Ficha</Typography.H2>
+                                    <button onClick={() => setShowSwitchWorkoutModal(false)} style={{ color: 'var(--muted)' }}>✕</button>
+                                </Flex>
+                                <Typography.Body style={{ fontSize: '14px', marginBottom: '20px', opacity: 0.7 }}>
+                                    Abandonar o treino atual e começar outro?
+                                </Typography.Body>
+                                <Flex $flexDir="column" $gap="10px">
+                                    {minhasFichas
+                                        .filter(f => f.id !== id)
+                                        .map(f => (
+                                            <Card
+                                                key={f.id}
+                                                onClick={() => {
+                                                    // Limpa sessão atual
+                                                    localStorage.removeItem(`workout_session_${id}_${usuario.uid}`);
+                                                    localStorage.removeItem(`active_workout_${usuario.uid}`);
+                                                    navigate(`/workouts/execucao/${f.id}`, { replace: true });
+                                                    window.location.reload(); // Forçar recarregamento para nova sessão
+                                                }}
+                                                style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', cursor: 'pointer', textAlign: 'left', borderLeft: '4px solid var(--primary)' }}
+                                            >
+                                                <div>
+                                                    <h4 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px' }}>{f.nomeTreino}</h4>
+                                                    <Typography.Small style={{ opacity: 0.6 }}>{f.exercicios?.length || 0} exercícios • {f.local}</Typography.Small>
+                                                </div>
+                                            </Card>
+                                        ))
+                                    }
+                                    {minhasFichas.filter(f => f.id !== id).length === 0 && (
+                                        <Typography.Small>Você não possui outras fichas atribuídas.</Typography.Small>
+                                    )}
+                                </Flex>
                             </ModalContent>
                         </ModalOverlay>
                     )}

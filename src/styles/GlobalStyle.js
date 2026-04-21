@@ -88,12 +88,12 @@ export const GlobalStyle = createGlobalStyle`
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  /* Global Color Fix for Red Buttons */
-  button[style*="background-color: #ff5f5f"],
-  button[style*="background-color: red"],
-  button[style*="background: #ff5f5f"],
-  button[style*="background: red"],
-  .btn-red {
+  /* Global Color Fix for BlueViolet Buttons */
+  button[style*="background-color: #8A2BE2"],
+  button[style*="background-color: blueviolet"],
+  button[style*="background: #8A2BE2"],
+  button[style*="background: blueviolet"],
+  .btn-primary {
     color: #FFFFFF !important;
   }
   

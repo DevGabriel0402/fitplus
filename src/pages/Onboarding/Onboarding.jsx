@@ -185,7 +185,7 @@ const Onboarding = () => {
                 <Description>{slide.description}</Description>
 
                 <Controls>
-                  <BotaoPrimario onClick={handleNext} style={{ backgroundColor: "#CB1313" }}>
+                  <BotaoPrimario onClick={handleNext}>
                     {activeIndex === slides.length - 1 ? "Começar Agora" : "Próximo"}
                     <FiChevronRight size={22} />
                   </BotaoPrimario>

@@ -183,7 +183,16 @@ const PainelAlunoAdmin = () => {
                     <button onClick={() => navigate('/admin/usuarios')}><FiArrowLeft size={24} color="var(--text)" /></button>
                     <div>
                         <Typography.H2 style={{ margin: 0, textAlign: 'center' }}>{aluno?.nome || 'Aluno'}</Typography.H2>
-                        <Typography.Small style={{ display: 'block', textAlign: 'center' }}>Fichas de Treino</Typography.Small>
+                        <div style={{ textAlign: 'center', marginTop: '4px' }}>
+                            <Typography.Small style={{ opacity: 0.6 }}>Dias: </Typography.Small>
+                            <Typography.Small style={{ color: 'var(--primary)', fontWeight: '700' }}>
+                                {aluno?.diasTreino?.length > 0 ? aluno.diasTreino.join(', ') : 'Não informado'}
+                            </Typography.Small>
+                            <Typography.Small style={{ opacity: 0.6, marginLeft: '10px' }}>Local: </Typography.Small>
+                            <Typography.Small style={{ color: 'var(--primary)', fontWeight: '700' }}>
+                                {aluno?.localTreino || 'Não informado'}
+                            </Typography.Small>
+                        </div>
                     </div>
                     <div style={{ width: 24 }} />
                 </Flex>
@@ -221,9 +230,10 @@ const PainelAlunoAdmin = () => {
                                     <WorkoutIcon><FiZap /></WorkoutIcon>
                                     <div style={{ flex: 1 }}>
                                         <h4 style={{ fontSize: '18px', marginBottom: '6px' }}>{treino.nomeTreino}</h4>
-                                        <Flex $gap="0">
+                                        <Flex $gap="0" style={{ flexWrap: 'wrap' }}>
                                             <Badge>{treino.exercicios?.length || 0} EXERCÍCOS</Badge>
-                                            <Badge>~45 MIN</Badge>
+                                            {treino.local && <Badge>{treino.local.toUpperCase()}</Badge>}
+                                            {treino.dias?.length > 0 && <Badge>{treino.dias.join(', ')}</Badge>}
                                         </Flex>
                                     </div>
                                     <Flex $gap="15px">
@@ -235,7 +245,7 @@ const PainelAlunoAdmin = () => {
                                         </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); deletarTreino(treino.id); }}
-                                            style={{ color: '#ff5f5f', fontSize: '20px' }}
+                                            style={{ color: '#8A2BE2', fontSize: '20px' }}
                                         >
                                             <FiTrash2 />
                                         </button>

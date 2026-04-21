@@ -12,9 +12,38 @@ import ResumeWorkoutModal from '../../ui/components/ResumeWorkoutModal';
 import { collection, query, getDocs, orderBy, limit, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { LuCircleCheck } from 'react-icons/lu';
+import { DayButton } from '../Workouts/Workouts.styles';
 
 import { db } from '../../firebase/firestore';
 import { useColecao } from '../../hooks/useColecao';
+
+const mapDaysToInt = { 'Dom': 0, 'Seg': 1, 'Ter': 2, 'Qua': 3, 'Qui': 4, 'Sex': 5, 'Sab': 6 };
+const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+const getFormattedDayDate = (dayStr) => {
+  const today = new Date();
+  const currentDayIndex = today.getDay();
+  let cleanDayStr = dayStr;
+  if(dayStr === 'Sáb') cleanDayStr = 'Sab';
+  
+  const targetDayIndex = mapDaysToInt[cleanDayStr];
+  if (targetDayIndex === undefined) return { day: dayStr, date: '' };
+  
+  let diff = targetDayIndex - currentDayIndex;
+  const targetDate = new Date(today);
+  targetDate.setDate(today.getDate() + diff);
+  return { day: dayStr, date: targetDate.getDate().toString() };
+};
+
+const getDayProgress = (day, activeWorkout) => {
+  if (!activeWorkout || !activeWorkout.plan || !activeWorkout.plan[day]) return 0;
+  const progress = activeWorkout.progresso || {};
+  const totalSets = activeWorkout.plan[day].reduce((acc, ex) => acc + ((ex.muscle === 'Cardio' || ex.muscle === 'Funcional') ? 1 : ex.sets), 0);
+  if (totalSets === 0) return 0;
+  const completedSets = Object.keys(progress).filter(key => key.startsWith(`${day}-`) && progress[key]).length;
+  return Math.round((completedSets / totalSets) * 100);
+};
 
 const ShortcutGrid = styled.div`
   display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; padding: 0 20px; margin-bottom: 30px; margin-top: 20px;
@@ -346,6 +375,11 @@ const Home = () => {
   const [modalImcAberto, setModalImcAberto] = useState(false);
   const [modalProteinaAberto, setModalProteinaAberto] = useState(false);
 
+  const { documentos: treinosLista } = useColecao(usuario ? `treinos/${usuario.uid}/lista` : null);
+  const activeWorkout = treinosLista && treinosLista.length > 0 ? treinosLista[0] : null;
+  const todayDayStr = DIAS_SEMANA[new Date().getDay()];
+  const [activeDay, setActiveDay] = useState(todayDayStr);
+
   const { documentos: listaFavs } = useColecao(usuario ? `favoritos/${usuario.uid}/itens` : null);
   const isFavorito = (id) => listaFavs.some(f => f.id === id);
 
@@ -436,6 +470,49 @@ const Home = () => {
             <span>Meu Perfil</span>
           </ShortcutItem>
         </ShortcutGrid>
+
+        <SectionHeader style={{ marginTop: '0' }}>
+          <Typography.H2>Meu Treino</Typography.H2>
+          <Typography.Small style={{ color: 'var(--primary)', cursor: 'pointer' }} onClick={() => navigate('/workouts')}>Ver rotina</Typography.Small>
+        </SectionHeader>
+
+        {activeWorkout ? (
+          <div style={{ padding: '0 20px', marginBottom: '30px' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <style>{`
+                div::-webkit-scrollbar { display: none; }
+              `}</style>
+              {[...(activeWorkout.dias || [])].sort((a, b) => {
+                const aClean = a === 'Sáb' ? 'Sab' : a;
+                const bClean = b === 'Sáb' ? 'Sab' : b;
+                return mapDaysToInt[aClean] - mapDaysToInt[bClean];
+              }).map(dia => {
+                const dateInfo = getFormattedDayDate(dia);
+                const progress = getDayProgress(dia, activeWorkout);
+                const isDayDone = progress === 100;
+                return (
+                  <DayButton key={dia} $active={activeDay === dia} onClick={() => { setActiveDay(dia); navigate('/workouts'); }}>
+                    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      {isDayDone && <LuCircleCheck size={16} color="var(--success, #4CAF50)" style={{ position: 'absolute', top: -15, right: -15 }} />}
+                      <span style={{ fontSize: '0.875rem', fontWeight: 700 }}>{dateInfo.day}</span>
+                      {dateInfo.date && <span style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.8 }}>{dateInfo.date}</span>}
+                    </div>
+                    <div style={{ width: '100%', height: '6px', backgroundColor: activeDay === dia ? 'rgba(255,255,255,0.3)' : 'var(--primaryLight, #e0e0e0)', borderRadius: '9999px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', backgroundColor: activeDay === dia ? '#fff' : 'var(--primary)', width: `${progress}%`, transition: 'width 0.3s' }} />
+                    </div>
+                  </DayButton>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div style={{ padding: '0 20px', marginBottom: '30px' }}>
+            <Card style={{ textAlign: 'center', padding: '20px', backgroundColor: 'var(--surface)' }}>
+              <Typography.Body style={{ marginBottom: '10px' }}>Você ainda não tem um treino montado.</Typography.Body>
+              <BotaoPrimario onClick={() => navigate('/workouts')} style={{ padding: '10px' }}>Montar Meu Treino</BotaoPrimario>
+            </Card>
+          </div>
+        )}
 
         <SectionHeader>
           <Typography.H2>Treinos Sugeridos</Typography.H2>

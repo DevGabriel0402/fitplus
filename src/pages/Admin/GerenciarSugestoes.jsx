@@ -114,7 +114,7 @@ const GerenciarSugestoes = () => {
                                 <button onClick={() => navigate(`/admin/sugestoes/editar/${treino.id}`)} style={{ color: 'var(--muted)' }}>
                                     <FiEdit2 size={18} />
                                 </button>
-                                <button onClick={() => handleDelete(treino.id)} style={{ color: '#ff5f5f' }}>
+                                <button onClick={() => handleDelete(treino.id)} style={{ color: '#8A2BE2' }}>
                                     <FiTrash2 size={18} />
                                 </button>
                             </Flex>

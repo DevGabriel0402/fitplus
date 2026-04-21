@@ -116,7 +116,7 @@ const GerenciarArtigos = () => {
                                 <button onClick={() => navigate(`/admin/artigos/editar/${artigo.id}`)} style={{ color: 'var(--muted)' }}>
                                     <FiEdit2 size={18} />
                                 </button>
-                                <button onClick={() => handleDelete(artigo.id)} style={{ color: '#ff5f5f' }}>
+                                <button onClick={() => handleDelete(artigo.id)} style={{ color: '#8A2BE2' }}>
                                     <FiTrash2 size={18} />
                                 </button>
                             </Flex>

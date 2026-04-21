@@ -157,7 +157,7 @@ const GerenciarSolicitacoes = () => {
                                         </>
                                     )}
                                     <IconButton
-                                        $bg="transparent" $color="#ff5f5f"
+                                        $bg="transparent" $color="#8A2BE2"
                                         onClick={() => deletarItem(solic.id)}
                                         style={{ marginLeft: isResolvido ? 'auto' : '0' }}
                                     >

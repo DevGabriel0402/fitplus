@@ -10,7 +10,7 @@ export const useAjustes = () => useContext(AjustesContexto);
 export const AjustesProvider = ({ children }) => {
     const { usuario } = useAuth();
     const [ajustes, setAjustes] = useState({
-        corPrincipal: '#CB1313',
+        corPrincipal: '#8A2BE2',
         nomePainel: 'FITBODY',
         iconePainel: 'FaDumbbell'
     });

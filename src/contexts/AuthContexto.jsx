@@ -59,8 +59,8 @@ export const AuthProvider = ({ children }) => {
     dadosUsuario,
     carregando,
     perfilCompleto,
-    setPerfilCompleto
-
+    setPerfilCompleto,
+    deslogar: () => auth.signOut()
   };
 
   return (

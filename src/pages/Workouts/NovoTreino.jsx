@@ -148,21 +148,24 @@ const SortableExerciseItem = ({ ex, index, removerExercicio, atualizarExercicio 
                 <ExerciseInfo>
                     <h4 style={{ fontSize: '14px', margin: 0 }}>{ex.nome}</h4>
                     <CompactControls>
+                        {ex.categoria?.toLowerCase() !== 'cardio' && ex.muscle?.toLowerCase() !== 'cardio' ? (
+                            <InputGroup>
+                                <span>Séries</span>
+                                <CompactInput
+                                    type="number"
+                                    value={ex.series || 3}
+                                    onChange={(e) => atualizarExercicio(index, 'series', e.target.value)}
+                                />
+                            </InputGroup>
+                        ) : null}
                         <InputGroup>
-                            <span>Séries</span>
-                            <CompactInput
-                                type="number"
-                                value={ex.series || 3}
-                                onChange={(e) => atualizarExercicio(index, 'series', e.target.value)}
-                            />
-                        </InputGroup>
-                        <InputGroup>
-                            <span>Reps</span>
+                            <span>{ex.categoria?.toLowerCase() === 'cardio' || ex.muscle?.toLowerCase() === 'cardio' ? 'Duração' : 'Reps'}</span>
                             <CompactInput
                                 type="text"
                                 value={ex.reps || '10'}
                                 onChange={(e) => atualizarExercicio(index, 'reps', e.target.value)}
-                                style={{ width: '60px' }}
+                                style={{ width: '80px' }}
+                                placeholder={ex.categoria?.toLowerCase() === 'cardio' || ex.muscle?.toLowerCase() === 'cardio' ? 'Ex: 15 min' : '10'}
                             />
                         </InputGroup>
                         <InputGroup>
@@ -205,7 +208,7 @@ const SortableExerciseItem = ({ ex, index, removerExercicio, atualizarExercicio 
                 </ExerciseInfo>
 
                 <Flex $gap="5px">
-                    <IconButton color="#ff5f5f" onClick={() => removerExercicio(index)}>
+                    <IconButton color="#8A2BE2" onClick={() => removerExercicio(index)}>
                         <FiTrash2 size={18} />
                     </IconButton>
                     <DragHandle {...attributes} {...listeners}>
@@ -224,6 +227,10 @@ const NovoTreino = () => {
     const { id, alunoId } = params;
     const [nomeTreino, setNomeTreino] = useState('');
     const [exercicios, setExercicios] = useState([]);
+    const [dias, setDias] = useState([]);
+    const [local, setLocal] = useState('Academia');
+    const [diasPreferidos, setDiasPreferidos] = useState([]);
+    const [localPreferencia, setLocalPreferencia] = useState('');
     const [salvando, setSalvando] = useState(false);
     const [carregando, setCarregando] = useState(false);
     const [modalConfig, setModalConfig] = useState({ isOpen: false });
@@ -240,6 +247,8 @@ const NovoTreino = () => {
                     if (docSnap.exists()) {
                         const data = docSnap.data();
                         setNomeTreino(data.nomeTreino);
+                        setDias(data.dias || []);
+                        setLocal(data.local || 'Academia');
                         setExercicios(data.exercicios.map((ex, i) => ({
                             ...ex,
                             instanceId: ex.instanceId || `${ex.id}-${Date.now()}-${i}`
@@ -256,18 +265,38 @@ const NovoTreino = () => {
                 }
             };
             fetchTreino();
-        } else {
+        }
+
+        // Fetch student preferred days
+        const fetchAlunoInfo = async () => {
+            try {
+                const alunoSnap = await getDoc(doc(db, 'usuarios', targetUid));
+                if (alunoSnap.exists()) {
+                    const data = alunoSnap.data();
+                    setDiasPreferidos(data.diasTreino || []);
+                    setLocalPreferencia(data.localTreino || '');
+                    if (!id && data.localTreino) setLocal(data.localTreino);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar info do aluno:", error);
+            }
+        };
+        fetchAlunoInfo();
+
+        if (!id) {
             const draft = JSON.parse(localStorage.getItem('workout_draft_data') || '{}');
             if (draft.nomeTreino) setNomeTreino(draft.nomeTreino);
             if (draft.exercicios) setExercicios(draft.exercicios);
+            if (draft.dias) setDias(draft.dias);
+            if (draft.local) setLocal(draft.local);
         }
     }, [id, targetUid, navigate]);
 
     useEffect(() => {
-        if (!id && (nomeTreino || exercicios.length > 0)) {
-            localStorage.setItem('workout_draft_data', JSON.stringify({ nomeTreino, exercicios }));
+        if (!id && (nomeTreino || exercicios.length > 0 || dias.length > 0 || local !== 'Academia')) {
+            localStorage.setItem('workout_draft_data', JSON.stringify({ nomeTreino, exercicios, dias, local }));
         }
-    }, [nomeTreino, exercicios, id]);
+    }, [nomeTreino, exercicios, dias, local, id]);
 
     const removerExercicio = useCallback((index) => {
         setExercicios(prev => {
@@ -294,6 +323,8 @@ const NovoTreino = () => {
             const treinoData = {
                 nomeTreino,
                 exercicios,
+                dias,
+                local,
                 atualizadoEm: serverTimestamp()
             };
 
@@ -387,6 +418,70 @@ const NovoTreino = () => {
                     />
                 </InputWrapper>
 
+                <div style={{ marginTop: '20px' }}>
+                    <Label style={{ display: 'block', marginBottom: '10px' }}>Dias da Semana</Label>
+                    {diasPreferidos.length > 0 && (
+                        <Typography.Small style={{ display: 'block', marginBottom: '10px', opacity: 0.7 }}>
+                            Preferência do Aluno: <span style={{ color: 'var(--primary)', fontWeight: '700' }}>{diasPreferidos.join(', ')}</span>
+                        </Typography.Small>
+                    )}
+                    <Flex $gap="8px" style={{ flexWrap: 'wrap' }}>
+                        {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(dia => {
+                            const isSelected = dias.includes(dia);
+                            return (
+                                <button
+                                    key={dia}
+                                    onClick={() => {
+                                        setDias(prev => isSelected ? prev.filter(d => d !== dia) : [...prev, dia]);
+                                    }}
+                                    style={{
+                                        padding: '8px 16px',
+                                        borderRadius: '10px',
+                                        backgroundColor: isSelected ? 'var(--primary)' : 'var(--card)',
+                                        color: isSelected ? '#fff' : 'var(--text)',
+                                        border: '1px solid ' + (isSelected ? 'var(--primary)' : 'var(--border)'),
+                                        fontWeight: '700',
+                                        fontSize: '13px',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    {dia}
+                                </button>
+                            );
+                        })}
+                    </Flex>
+                </div>
+
+                <div style={{ marginTop: '25px' }}>
+                    <Label style={{ display: 'block', marginBottom: '10px' }}>Onde será o treino?</Label>
+                    {localPreferencia && (
+                        <Typography.Small style={{ display: 'block', marginBottom: '10px', opacity: 0.7 }}>
+                            Preferência do Aluno: <span style={{ color: 'var(--primary)', fontWeight: '700' }}>{localPreferencia}</span>
+                        </Typography.Small>
+                    )}
+                    <Flex $gap="10px">
+                        {['Academia', 'Casa', 'Rua/Parque'].map(l => (
+                            <button
+                                key={l}
+                                onClick={() => setLocal(l)}
+                                style={{
+                                    flex: 1,
+                                    padding: '12px',
+                                    borderRadius: '12px',
+                                    backgroundColor: local === l ? 'var(--primary)' : 'var(--card)',
+                                    color: local === l ? '#fff' : 'var(--text)',
+                                    border: '1px solid ' + (local === l ? 'var(--primary)' : 'var(--border)'),
+                                    fontWeight: '700',
+                                    fontSize: '14px',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                {l}
+                            </button>
+                        ))}
+                    </Flex>
+                </div>
+
                 <Flex $justify="space-between" style={{ marginTop: '30px', marginBottom: '15px' }}>
                     <Typography.H2 style={{ fontSize: '18px', margin: 0 }}>Exercícios</Typography.H2>
                     <button
@@ -430,7 +525,7 @@ const NovoTreino = () => {
                         <BotaoPrimario
                             onClick={deletarTreino}
                             disabled={salvando || carregando}
-                            style={{ flex: 1, backgroundColor: 'transparent', border: '1px solid #ff5f5f', color: '#ff5f5f' }}
+                            style={{ flex: 1, backgroundColor: 'transparent', border: '1px solid #8A2BE2', color: '#8A2BE2' }}
                         >
                             Excluir Treino
                         </BotaoPrimario>

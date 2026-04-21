@@ -145,7 +145,7 @@ const Login = () => {
                     <LinkText to="/esqueci-senha">Esqueceu a senha?</LinkText>
                 </Flex>
 
-                <BotaoPrimario type="submit" disabled={loading} style={{ backgroundColor: "#CB1313", color: "#fafafa" }}>
+                <BotaoPrimario type="submit" disabled={loading}>
                     {loading ? 'Entrando...' : 'Entrar'}
                 </BotaoPrimario>
             </form>

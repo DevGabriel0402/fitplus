@@ -1,213 +1,129 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { FiUser, FiHeart, FiShield, FiSettings, FiHelpCircle, FiLogOut, FiChevronRight, FiEdit2 } from 'react-icons/fi';
+import { LuUser, LuInfo, LuActivity, LuScale, LuSettings, LuShield, LuHeart, LuLogOut, LuChevronRight } from 'react-icons/lu';
 import { AppShell } from '../../ui/AppShell/AppShell';
-import { Container, Typography, Card, Flex } from '../../ui/components/BaseUI';
-import { useUsuario } from '../../hooks/useUsuario';
 import { useAuth } from '../../contexts/AuthContexto';
+import { useUsuario } from '../../hooks/useUsuario';
 import { deslogar } from '../../firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../firebase/firestore';
-
-const ProfileHeader = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 20px 20px;
-`;
-
-const AvatarContainer = styled.div`
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background-color: var(--surface);
-  border: 4px solid var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  margin-bottom: 15px;
-
-  svg::nth-child(1) { font-size: 40px; color: var(--muted); }
-  svg::nth-child(2) { font-size: 15px; color: var(--muted); }
-`;
-
-const EditButton = styled.button`
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: var(--primary);
-  color: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  border: 3px solid var(--bg);
-`;
-
-const StatsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  width: 100%;
-  margin: 20px 0;
-`;
-
-const StatItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 15px;
-  background-color: var(--card);
-  border-radius: 12px;
-  padding: 12px;
-  background-color: var(--card);
-  border-radius: 12px;
-  border: 1px solid var(--border);
-
-  .value { font-weight: 800; font-size: 16px; color: var(--primary); text-align: center; }
-  .label { font-size: 10px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
-`;
+import { PageContainer, SectionTitle, SectionSubtitle } from '../Workouts/Workouts.styles';
 
 const MenuList = styled.div`
   width: 100%;
-  margin-top: 20px;
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 `;
 
 const MenuItem = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
-  background-color: var(--card);
-  border-radius: 12px;
-  margin-bottom: 10px;
-  border: 1px solid var(--border);
+  padding: 1.25rem;
+  background-color: #fff;
+  border-radius: ${({ theme }) => theme.borderRadius['2xl']};
+  border: 1px solid ${({ theme }) => theme.colors.border};
   cursor: pointer;
+  transition: all 0.2s;
 
-  .main { display: flex; align-items: center; gap: 12px; font-weight: 500; }
-  svg { font-size: 20px; }
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.borderDark};
+  }
+
+  .main { display: flex; align-items: center; gap: 0.75rem; font-weight: 700; color: ${({ theme }) => theme.colors.textMain}; }
+  svg { font-size: 1.25rem; color: ${({ theme }) => theme.colors.textLight}; }
 `;
 
 const Perfil = () => {
     const { dados, carregando } = useUsuario();
     const { usuario, dadosUsuario } = useAuth();
     const navigate = useNavigate();
-    const [caloriasHoje, setCaloriasHoje] = useState(0);
 
-    useEffect(() => {
-        const fetchCaloriasDeHoje = async () => {
-            if (usuario?.uid) {
-                const dateStr = new Date().toISOString().split('T')[0];
-                const docRef = doc(db, `usuarios/${usuario.uid}/diario_nutricao`, dateStr);
-                try {
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists() && docSnap.data().calorias) {
-                        setCaloriasHoje(docSnap.data().calorias);
-                    }
-                } catch (error) {
-                    console.error("Erro ao carregar calorias:", error);
-                }
-            }
-        };
-        fetchCaloriasDeHoje();
-    }, [usuario]);
+    const imcData = useMemo(() => {
+        const w = parseFloat(dados?.peso);
+        const h = parseFloat(dados?.altura);
+        if (!w || !h) return { value: 0, text: 'N/A', bg: '#e2e8f0', color: '#64748b' };
+        
+        let heightMeters = h > 3 ? h / 100 : h;
+        const imcValue = (w / (heightMeters * heightMeters)).toFixed(1);
+        
+        if (imcValue < 18.5) return { value: imcValue, text: 'Abaixo do peso', color: '#3b82f6', bg: '#dbeafe' };
+        if (imcValue < 25) return { value: imcValue, text: 'Peso Normal', color: '#10b981', bg: '#d1fae5' };
+        if (imcValue < 30) return { value: imcValue, text: 'Sobrepeso', color: '#f59e0b', bg: '#fef3c7' };
+        return { value: imcValue, text: 'Obesidade', color: '#f43f5e', bg: '#ffe4e6' };
+    }, [dados?.peso, dados?.altura]);
 
     const handleLogout = async () => {
         await deslogar();
         navigate('/login');
     };
 
-    if (carregando) return <div style={{ color: 'white', padding: '20px' }}>Carregando...</div>;
+    if (carregando) return <div style={{ padding: '2rem', textAlign: 'center' }}>Carregando...</div>;
 
     return (
         <AppShell>
-            <Container>
-                <ProfileHeader>
-                    <AvatarContainer>
-                        <FiUser size={40} />
-                        <EditButton onClick={() => navigate('/perfil/editar')}><FiEdit2 /></EditButton>
-                    </AvatarContainer>
-                    <Typography.H2>{dados?.nome || 'Atleta'}</Typography.H2>
-                    <Typography.Small>{dados?.email}</Typography.Small>
+            <PageContainer>
+                <div style={{ textAlign: 'center', marginBottom: '2rem', paddingTop: '1rem' }}>
+                    <div style={{ width: '6rem', height: '6rem', background: 'linear-gradient(to top right, #7c3aed, #f43f5e)', borderRadius: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', transform: 'rotate(3deg)', boxShadow: '0 10px 15px -3px rgba(124, 58, 237, 0.3)' }}>
+                    <LuUser size={40} color="#fff" style={{ transform: 'rotate(-3deg)' }} />
+                    </div>
+                    <SectionTitle style={{ justifyContent: 'center' }}>{dados?.nome?.split(' ')[0] || 'Atleta'}</SectionTitle>
+                    <SectionSubtitle>{dados?.email}</SectionSubtitle>
+                </div>
 
-                    <StatsGrid>
-                        <StatItem>
-                            <span className="value">{dados?.peso || '--'}</span>
-                            <span className="label">Peso ({dados?.unidadePeso || 'kg'})</span>
-                        </StatItem>
-                        <StatItem>
-                            <span className="value">{dados?.metaPeso || '--'}</span>
-                            <span className="label">Meta ({dados?.unidadePeso || 'kg'})</span>
-                        </StatItem>
-                        <StatItem>
-                            <span className="value">{dados?.altura || '--'}</span>
-                            <span className="label">Altura ({dados?.unidadeAltura || 'cm'})</span>
-                        </StatItem>
-                        {/* <StatItem>
-                            <span className="value">{dados?.idade || '--'}</span>
-                            <span className="label">Idade (Anos)</span>
-                        </StatItem> */}
-                        <StatItem style={{ border: '1px solid var(--primary)' }}>
-                            <span className="value">{dados?.imc || '--'}</span>
-                            <span className="label">IMC ({dados?.statusImc || 'Calculando...'})</span>
-                        </StatItem>
-                        <StatItem style={{ border: '1px solid var(--primary)' }}>
-                            <span className="value">{dados?.proteinaDiaria ? `${dados.proteinaDiaria}g` : '--'}</span>
-                            <span className="label">Proteína / dia</span>
-                        </StatItem>
-                        <StatItem style={{ border: '1px solid var(--primary)' }}>
-                            <span className="value">{caloriasHoje} kcal</span>
-                            <span className="label">Consumido Hoje</span>
-                        </StatItem>
-                    </StatsGrid>
-                </ProfileHeader>
+                <div style={{ backgroundColor: '#fff', padding: '1.25rem', borderRadius: '1.5rem', marginBottom: '1.5rem', border: '1px solid #f1f5f9' }}>
+                    <h2 style={{ fontWeight: 900, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.125rem' }}>
+                    <LuInfo color="#7c3aed" /> Ficha Pessoal
+                    </h2>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                        <div style={{ backgroundColor: '#f8fafc', padding: '0.75rem', borderRadius: '1rem', textAlign: 'center' }}>
+                            <span style={{ display: 'block', fontSize: '0.625rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>Peso</span>
+                            <span style={{ fontSize: '1.125rem', fontWeight: 900 }}>{dados?.peso || '--'} kg</span>
+                        </div>
+                        <div style={{ backgroundColor: '#f8fafc', padding: '0.75rem', borderRadius: '1rem', textAlign: 'center' }}>
+                            <span style={{ display: 'block', fontSize: '0.625rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>Altura</span>
+                            <span style={{ fontSize: '1.125rem', fontWeight: 900 }}>{dados?.altura || '--'} cm</span>
+                        </div>
+                        <button onClick={() => navigate('/perfil/editar')} style={{ gridColumn: 'span 2', padding: '0.75rem', backgroundColor: '#ede9fe', color: '#6d28d9', borderRadius: '1rem', fontWeight: 700, fontSize: '0.875rem' }}>
+                            Atualizar Medidas
+                        </button>
+                    </div>
+                </div>
+
+                <div style={{ backgroundColor: '#fff', padding: '1.5rem', borderRadius: '1.5rem', border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                    <h2 style={{ fontWeight: 700, marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
+                        <LuActivity color="#94a3b8" /> Seu IMC
+                    </h2>
+                    <div style={{ fontSize: '2.25rem', fontWeight: 900, letterSpacing: '-0.05em' }}>{imcData.value}</div>
+                    <div style={{ marginTop: '0.5rem', display: 'inline-flex', padding: '0.25rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 700, backgroundColor: imcData.bg, color: imcData.color }}>
+                        {imcData.text}
+                    </div>
+                    </div>
+                    <div style={{ width: '5rem', height: '5rem', borderRadius: '50%', backgroundColor: imcData.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <LuScale size={40} color={imcData.color} />
+                    </div>
+                </div>
 
                 <MenuList>
-                    <MenuItem onClick={() => navigate('/perfil/editar')}>
-                        <div className="main"><FiUser /> Meu Perfil</div>
-                        <FiChevronRight color="var(--muted)" />
+                    <MenuItem onClick={() => navigate('/perfil/ajustes')}>
+                        <div className="main"><LuSettings /> Ajustes da Conta</div>
+                        <LuChevronRight />
                     </MenuItem>
-                    <MenuItem onClick={() => navigate('/favoritos')}>
-                        <div className="main"><FiHeart /> Favoritos</div>
-                        <FiChevronRight color="var(--muted)" />
-                    </MenuItem>
-
                     {dadosUsuario?.role?.toLowerCase() === 'admin' && (
                         <MenuItem onClick={() => navigate('/admin')}>
-                            <div className="main"><FiShield /> Painel Administrativo</div>
-                            <FiChevronRight color="var(--muted)" />
+                            <div className="main"><LuShield /> Painel Administrativo</div>
+                            <LuChevronRight />
                         </MenuItem>
                     )}
-
-
-                    <MenuItem>
-                        <div className="main"><FiShield /> Privacidade</div>
-                        <FiChevronRight color="var(--muted)" />
-                    </MenuItem>
-
-
-                    <MenuItem onClick={() => navigate('/perfil/ajustes')}>
-                        <div className="main"><FiSettings /> Ajustes</div>
-                        <FiChevronRight color="var(--muted)" />
-                    </MenuItem>
-
-                    <MenuItem onClick={() => {
-                        const message = encodeURIComponent("Olá! Gostaria de fazer uma reclamação ou sugestão sobre o PersonalPlus.");
-                        window.open(`https://wa.me/5531991660594?text=${message}`, '_blank');
-                    }}>
-                        <div className="main"><FiHelpCircle /> Ajuda</div>
-                        <FiChevronRight color="var(--muted)" />
-                    </MenuItem>
-                    <MenuItem onClick={handleLogout} style={{ border: '1px solid rgba(255, 95, 95, 0.2)' }}>
-                        <div className="main" style={{ color: '#ff5f5f' }}><FiLogOut /> Sair da Conta</div>
+                    <MenuItem onClick={handleLogout} style={{ border: '1px solid rgba(244, 63, 94, 0.2)' }}>
+                        <div className="main" style={{ color: '#f43f5e' }}><LuLogOut /> Sair da Conta</div>
                     </MenuItem>
                 </MenuList>
-            </Container>
+
+            </PageContainer>
         </AppShell>
     );
 };

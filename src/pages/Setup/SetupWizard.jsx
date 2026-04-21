@@ -18,6 +18,7 @@ import {
 } from '../../ui/components/BaseUI';
 import CustomSelect from '../../ui/components/CustomSelect';
 import { maskTelefone } from '../../utils/masks';
+import { motion, AnimatePresence } from 'framer-motion';
 
 
 const SetupContainer = styled(Container)`
@@ -104,7 +105,7 @@ const UnitButton = styled.button`
 
 const SetupWizard = () => {
     const { usuario, setPerfilCompleto } = useAuth();
-    const [step, setStep] = useState(1);
+    const [step, setStep] = useState(0); 
     const [dados, setDados] = useState({
         genero: '',
         idade: 25,
@@ -114,10 +115,12 @@ const SetupWizard = () => {
         unidadeAltura: 'CM',
         objetivo: '',
         nivelAtividade: '',
-        telefone: ''
+        telefone: '',
+        diasTreino: [],
+        localTreino: ''
     });
 
-    const totalSteps = 8;
+    const totalSteps = 10;
     const progress = (step / totalSteps) * 100;
     const navigate = useNavigate();
 
@@ -126,15 +129,13 @@ const SetupWizard = () => {
     };
 
     const handleBack = () => {
-        if (step > 1) setStep(step - 1);
+        if (step > 0) setStep(step - 1);
     };
 
     const finalizarSetup = async () => {
         try {
-            // Cálculos Automáticos de IMC e Proteína baseados nos dados
             let dadosCalculados = {};
             if (dados.peso && dados.altura) {
-                // Cálculo IMC
                 const altMetros = parseFloat(dados.altura) > 3 ? parseFloat(dados.altura) / 100 : parseFloat(dados.altura);
                 const imcValue = (parseFloat(dados.peso) / (altMetros * altMetros)).toFixed(1);
                 let statusImc = 'Peso normal';
@@ -143,9 +144,8 @@ const SetupWizard = () => {
                 else if (imcValue < 30) statusImc = 'Sobrepeso';
                 else statusImc = 'Obesidade';
 
-                // Cálculo Proteína
                 let mult = { min: 1.6, max: 1.8, label: 'Manter' };
-                if (dados.objetivo === 'Ganhar Músculo') mult = { min: 1.8, max: 2.2, label: 'Ganhar Massa' };
+                if (dados.objetivo === 'Ganhar Musculo') mult = { min: 1.8, max: 2.2, label: 'Ganhar Massa' };
                 else if (dados.objetivo === 'Perder Peso') mult = { min: 1.6, max: 2.0, label: 'Emagrecimento' };
                 else if (dados.nivelAtividade === 'Iniciante (1-2 dias/sem)') mult = { min: 1.4, max: 1.6, label: 'Atividade Leve' };
 
@@ -179,30 +179,53 @@ const SetupWizard = () => {
 
     const renderStep = () => {
         switch (step) {
+            case 0:
+                return (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        style={{ textAlign: 'center', marginTop: '40px' }}
+                    >
+                        <div style={{ fontSize: '64px', marginBottom: '20px' }}>👋</div>
+                        <Typography.H1 style={{ fontSize: '32px', marginBottom: '15px' }}>Ola! Vamos comecar?</Typography.H1>
+                        <Typography.Body style={{ fontSize: '18px', maxWidth: '300px', margin: '0 auto' }}>
+                            Precisamos de algumas informacoes para criar seu plano personalizado de alta performance.
+                        </Typography.Body>
+                    </motion.div>
+                );
             case 1:
                 return (
-                    <StepContent>
-                        <Typography.H1>Qual o seu gênero?</Typography.H1>
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
+                        <Typography.H1>Qual o seu genero?</Typography.H1>
                         <Typography.Body>Isso nos ajuda a calcular suas calorias e treinos.</Typography.Body>
                         <OptionGrid>
                             <SelectableCard
                                 $active={dados.genero === 'Masculino'}
-                                onClick={() => setDados({ ...dados, genero: 'Masculino' })}
+                                onClick={() => { setDados({ ...dados, genero: 'Masculino' }); handleNext(); }}
                             >
                                 Masculino
                             </SelectableCard>
                             <SelectableCard
                                 $active={dados.genero === 'Feminino'}
-                                onClick={() => setDados({ ...dados, genero: 'Feminino' })}
+                                onClick={() => { setDados({ ...dados, genero: 'Feminino' }); handleNext(); }}
                             >
                                 Feminino
                             </SelectableCard>
                         </OptionGrid>
-                    </StepContent>
+                    </motion.div>
                 );
             case 2:
                 return (
-                    <StepContent>
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
                         <Typography.H1>Qual a sua idade?</Typography.H1>
                         <PickerContainer>
                             <BigNumber>{dados.idade}</BigNumber>
@@ -214,11 +237,15 @@ const SetupWizard = () => {
                                 style={{ width: '80%', accentColor: 'var(--primary)' }}
                             />
                         </PickerContainer>
-                    </StepContent>
+                    </motion.div>
                 );
             case 3:
                 return (
-                    <StepContent>
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
                         <Typography.H1>Qual o seu peso?</Typography.H1>
                         <PickerContainer>
                             <BigNumber>{dados.peso}</BigNumber>
@@ -234,11 +261,15 @@ const SetupWizard = () => {
                                 style={{ width: '80%', accentColor: 'var(--primary)', marginTop: '40px' }}
                             />
                         </PickerContainer>
-                    </StepContent>
+                    </motion.div>
                 );
             case 4:
                 return (
-                    <StepContent>
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
                         <Typography.H1>Qual a sua altura?</Typography.H1>
                         <PickerContainer>
                             <BigNumber>{dados.altura}<span style={{ fontSize: '24px' }}>{dados.unidadeAltura}</span></BigNumber>
@@ -254,50 +285,128 @@ const SetupWizard = () => {
                                 style={{ width: '80%', accentColor: 'var(--primary)', marginTop: '40px' }}
                             />
                         </PickerContainer>
-                    </StepContent>
+                    </motion.div>
                 );
             case 5:
                 return (
-                    <StepContent>
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
                         <Typography.H1>Qual seu objetivo?</Typography.H1>
                         <div style={{ marginTop: '20px' }}>
                             <CustomSelect
                                 value={dados.objetivo}
-                                onChange={(val) => setDados({ ...dados, objetivo: val })}
+                                onChange={(val) => { setDados({ ...dados, objetivo: val }); handleNext(); }}
                                 options={[
                                     { label: 'Perder Peso', value: 'Perder Peso' },
-                                    { label: 'Ganhar Músculo', value: 'Ganhar Músculo' },
+                                    { label: 'Ganhar Musculo', value: 'Ganhar Musculo' },
                                     { label: 'Manter o Shape', value: 'Manter o Shape' },
-                                    { label: 'Saúde e Bem-estar', value: 'Saúde e Bem-estar' },
+                                    { label: 'Saude e Bem-estar', value: 'Saude e Bem-estar' },
                                 ]}
                             />
                         </div>
-                    </StepContent>
-
+                    </motion.div>
                 );
             case 6:
                 return (
-                    <StepContent>
-                        <Typography.H1>Nível de Atividade</Typography.H1>
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
+                        <Typography.H1>Nivel de Atividade</Typography.H1>
                         <div style={{ marginTop: '20px' }}>
                             <CustomSelect
                                 value={dados.nivelAtividade}
-                                onChange={(val) => setDados({ ...dados, nivelAtividade: val })}
+                                onChange={(val) => { setDados({ ...dados, nivelAtividade: val }); handleNext(); }}
                                 options={[
                                     { label: 'Iniciante (1-2 dias/sem)', value: 'Iniciante (1-2 dias/sem)' },
-                                    { label: 'Intermediário (3-4 dias/sem)', value: 'Intermediário (3-4 dias/sem)' },
-                                    { label: 'Avançado (5+ dias/sem)', value: 'Avançado (5+ dias/sem)' },
+                                    { label: 'Intermediario (3-4 dias/sem)', value: 'Intermediario (3-4 dias/sem)' },
+                                    { label: 'Avancado (5+ dias/sem)', value: 'Avancado (5+ dias/sem)' },
                                 ]}
                             />
                         </div>
-                    </StepContent>
-
+                    </motion.div>
                 );
             case 7:
                 return (
-                    <StepContent>
-                        <Typography.H1>Quase lá!</Typography.H1>
-                        <Typography.Body>Complete seu perfil com algumas informações extras.</Typography.Body>
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
+                        <Typography.H1>Em quais dias voce pretende treinar?</Typography.H1>
+                        <Typography.Body>Selecione os dias da semana que voce tem disponibilidade.</Typography.Body>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '30px' }}>
+                            {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'].map(dia => {
+                                const isSelected = dados.diasTreino.includes(dia);
+                                return (
+                                    <SelectableCard
+                                        key={dia}
+                                        $active={isSelected}
+                                        onClick={() => {
+                                            const novosDias = isSelected
+                                                ? dados.diasTreino.filter(d => d !== dia)
+                                                : [...dados.diasTreino, dia];
+                                            setDados({ ...dados, diasTreino: novosDias });
+                                        }}
+                                        style={{ padding: '15px', minWidth: '80px' }}
+                                    >
+                                        {dia}
+                                    </SelectableCard>
+                                );
+                            })}
+                        </div>
+                    </motion.div>
+                );
+            case 8:
+                return (
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
+                        <Typography.H1>Onde voce prefere treinar?</Typography.H1>
+                        <Typography.Body>Isso nos ajuda a sugerir exercicios adequados ao seu espaco.</Typography.Body>
+                        <OptionGrid>
+                            <SelectableCard
+                                $active={dados.localTreino === 'Academia'}
+                                onClick={() => { setDados({ ...dados, localTreino: 'Academia' }); handleNext(); }}
+                            >
+                                Academia
+                            </SelectableCard>
+                            <SelectableCard
+                                $active={dados.localTreino === 'Casa'}
+                                onClick={() => { setDados({ ...dados, localTreino: 'Casa' }); handleNext(); }}
+                            >
+                                Em Casa
+                            </SelectableCard>
+                            <SelectableCard
+                                $active={dados.localTreino === 'Parque/Rua'}
+                                onClick={() => { setDados({ ...dados, localTreino: 'Parque/Rua' }); handleNext(); }}
+                            >
+                                Parque / Rua
+                            </SelectableCard>
+                            <SelectableCard
+                                $active={dados.localTreino === 'Outro'}
+                                onClick={() => { setDados({ ...dados, localTreino: 'Outro' }); handleNext(); }}
+                            >
+                                Outro
+                            </SelectableCard>
+                        </OptionGrid>
+                    </motion.div>
+                );
+            case 9:
+                return (
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
+                        <Typography.H1>Quase la!</Typography.H1>
+                        <Typography.Body>Complete seu perfil com algumas informacoes extras.</Typography.Body>
                         <div style={{ marginTop: '40px' }}>
                             <InputWrapper>
                                 <Label>Telefone (Opcional)</Label>
@@ -309,17 +418,22 @@ const SetupWizard = () => {
                                 />
                             </InputWrapper>
                         </div>
-                    </StepContent>
+                    </motion.div>
                 );
-            case 8:
+            case 10:
                 return (
-                    <StepContent style={{ alignItems: 'center', justifyContent: 'center' }}>
-                        <div style={{ width: '100px', height: '100px', borderRadius: '50%', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '30px' }}>
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        style={{ textAlign: 'center' }}
+                    >
+                        <div style={{ width: '100px', height: '100px', borderRadius: '50%', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 30px' }}>
                             <FiCheck size={50} color="#fff" />
                         </div>
                         <Typography.H1>Tudo pronto!</Typography.H1>
-                        <Typography.Body>Seu plano está sendo preparado para você.</Typography.Body>
-                    </StepContent>
+                        <Typography.Body>Seu plano esta sendo preparado para voce.</Typography.Body>
+                    </motion.div>
                 );
             default:
                 return null;
@@ -329,7 +443,7 @@ const SetupWizard = () => {
     return (
         <SetupContainer>
             <Flex $justify="space-between" style={{ marginTop: '20px' }}>
-                <button onClick={handleBack} disabled={step === 1} style={{ visibility: step === 1 ? 'hidden' : 'visible' }}>
+                <button onClick={handleBack} disabled={step === 0} style={{ visibility: step === 0 ? 'hidden' : 'visible' }}>
                     <FiArrowLeft size={24} color="var(--text)" />
                 </button>
                 <Typography.Small>Passo {step} de {totalSteps}</Typography.Small>
@@ -340,11 +454,15 @@ const SetupWizard = () => {
                 <ProgressFill $progress={progress} />
             </ProgressBar>
 
-            {renderStep()}
+            <AnimatePresence mode="wait">
+                <StepContent key={step}>
+                    {renderStep()}
+                </StepContent>
+            </AnimatePresence>
 
             <Flex style={{ marginTop: 'auto', paddingBottom: '40px' }}>
                 {step === totalSteps ? (
-                    <BotaoPrimario onClick={finalizarSetup}>Começar Agora</BotaoPrimario>
+                    <BotaoPrimario onClick={finalizarSetup}>Comecar Agora</BotaoPrimario>
                 ) : (
                     <BotaoPrimario onClick={handleNext}>
                         Continuar <FiChevronRight />

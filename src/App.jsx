@@ -1,24 +1,27 @@
 import React from 'react';
 import { Toaster } from 'react-hot-toast';
-import { tema } from './styles/tema';
+import { ThemeProvider } from 'styled-components';
+import { theme } from './styles/theme';
+import { GlobalStyles } from './styles/GlobalStyles';
 import { Rotas } from './app/Rotas';
 
 function App() {
   return (
-    <>
+    <ThemeProvider theme={theme}>
+      <GlobalStyles />
       <Rotas />
       <Toaster
         position="top-center"
         toastOptions={{
           style: {
-            background: tema.colors.surface,
-            color: tema.colors.text,
-            borderRadius: tema.radius.medium,
-            border: `1px solid ${tema.colors.border}`,
+            background: theme.colors.surface,
+            color: theme.colors.textMain,
+            borderRadius: theme.borderRadius.md,
+            border: `1px solid ${theme.colors.border}`,
           },
         }}
       />
-    </>
+    </ThemeProvider>
   );
 }
 

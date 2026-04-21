@@ -74,8 +74,8 @@ const ExerciseCard = styled(Card)`
   align-items: center;
   transition: all 0.2s;
   cursor: pointer;
-  border: 1px solid ${({ $selected, $isDuplicate }) => ($isDuplicate ? '#ff5f5f' : ($selected ? 'var(--primary)' : 'var(--border)'))};
-  background-color: ${({ $selected, $isDuplicate }) => ($isDuplicate ? '#ff5f5f' : ($selected ? 'rgba(var(--primary-rgb), 0.05)' : 'var(--card)'))};
+  border: 1px solid ${({ $selected, $isDuplicate }) => ($isDuplicate ? '#8A2BE2' : ($selected ? 'var(--primary)' : 'var(--border)'))};
+  background-color: ${({ $selected, $isDuplicate }) => ($isDuplicate ? '#8A2BE2' : ($selected ? 'rgba(var(--primary-rgb), 0.05)' : 'var(--card)'))};
   color: ${({ $isDuplicate }) => ($isDuplicate ? '#fff' : 'inherit')};
   position: relative;
 
@@ -398,7 +398,7 @@ const Biblioteca = () => {
                       <button onClick={(e) => abrirModalEdicao(ex, e)} style={{ color: isDuplicate ? '#fff' : 'var(--muted)' }}>
                         <FiEdit2 size={18} />
                       </button>
-                      <button onClick={(e) => deletarExercicio(ex.id, e)} style={{ color: isDuplicate ? 'rgba(255,255,255,0.8)' : '#ff5f5f' }}>
+                      <button onClick={(e) => deletarExercicio(ex.id, e)} style={{ color: isDuplicate ? 'rgba(255,255,255,0.8)' : '#8A2BE2' }}>
                         <FiTrash2 size={18} />
                       </button>
                       <FiChevronRight color={isDuplicate ? '#fff' : "var(--muted)"} />

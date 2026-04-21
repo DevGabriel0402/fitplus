@@ -106,7 +106,7 @@ const GerenciarFeedbacks = () => {
                                         </Typography.Small>
                                     </Flex>
                                 </div>
-                                <button onClick={() => deletarFeedback(fb.id)} style={{ color: '#ff5f5f', opacity: 0.6 }}>
+                                <button onClick={() => deletarFeedback(fb.id)} style={{ color: '#8A2BE2', opacity: 0.6 }}>
                                     <FiTrash2 size={18} />
                                 </button>
                             </Flex>

@@ -58,7 +58,7 @@ const SortableExerciseItem = ({ ex, index, remover, atualizar }) => {
                     </Flex>
                 </div>
                 <Flex $gap="5px">
-                    <button onClick={() => remover(index)} style={{ color: '#ff5f5f' }}><FiTrash2 size={16} /></button>
+                    <button onClick={() => remover(index)} style={{ color: '#8A2BE2' }}><FiTrash2 size={16} /></button>
                     <div {...attributes} {...listeners} style={{ cursor: 'grab' }}><MdDragIndicator size={20} /></div>
                 </Flex>
             </ExerciseItem>

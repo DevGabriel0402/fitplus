@@ -197,14 +197,40 @@ const GeradorTreinos = () => {
         nivel: null,
         local: null,
         foco: null,
-        descanso: 60
+        descanso: 60,
+        dias: [],
+        series: 3
     });
 
-    const totalSteps = 5;
+    const totalSteps = 7;
 
     const stepsData = [
         {
             id: 1,
+            name: 'Local e Equipamentos',
+            key: 'local',
+            title: 'Onde você costuma treinar?',
+            subtitle: 'Definiremos os exercícios com base no que você tem disponível.',
+            options: [
+                { id: 'academia', emoji: '🏋️‍♀️', title: 'Academia Completa', desc: 'Acesso a máquinas, polias e pesos livres.' },
+                { id: 'casa_pesos', emoji: '🏠', title: 'Em Casa (Com Pesos)', desc: 'Tenho alguns halteres e elásticos em casa.' },
+                { id: 'casa_corpo', emoji: '🤸‍♂️', title: 'Em Casa (Peso do Corpo)', desc: 'Não possuo equipamentos, usarei apenas o peso corporal.' },
+            ]
+        },
+        {
+            id: 2,
+            name: 'Quantidade de Séries',
+            key: 'series',
+            title: 'Quantas séries por exercício?',
+            subtitle: 'Isso define o volume total do seu treino.',
+            options: [
+                { id: 2, emoji: '⚡', title: '2 Séries', desc: 'Treino rápido e focado.' },
+                { id: 3, emoji: '💪', title: '3 Séries', desc: 'Volume padrão recomendado.' },
+                { id: 4, emoji: '🔥', title: '4 Séries', desc: 'Foco em maior volume e exaustão.' },
+            ]
+        },
+        {
+            id: 3,
             name: 'Objetivo Principal',
             key: 'objetivo',
             title: 'Qual o seu objetivo atual?',
@@ -217,7 +243,7 @@ const GeradorTreinos = () => {
             ]
         },
         {
-            id: 2,
+            id: 4,
             name: 'Nível de Experiência',
             key: 'nivel',
             title: 'Qual seu nível atual de treino?',
@@ -229,19 +255,7 @@ const GeradorTreinos = () => {
             ]
         },
         {
-            id: 3,
-            name: 'Local e Equipamentos',
-            key: 'local',
-            title: 'Onde você costuma treinar?',
-            subtitle: 'Definiremos os exercícios com base no que você tem disponível.',
-            options: [
-                { id: 'academia', emoji: '🏋️‍♀️', title: 'Academia Completa', desc: 'Acesso a máquinas, polias e pesos livres.' },
-                { id: 'casa_pesos', emoji: '🏠', title: 'Em Casa (Com Pesos)', desc: 'Tenho alguns halteres e elásticos em casa.' },
-                { id: 'casa_corpo', emoji: '🤸‍♂️', title: 'Em Casa (Peso do Corpo)', desc: 'Não possuo equipamentos, usarei apenas o peso corporal.' },
-            ]
-        },
-        {
-            id: 4,
+            id: 5,
             name: 'Foco do Treino',
             key: 'foco',
             title: 'O que vamos treinar hoje?',
@@ -262,7 +276,7 @@ const GeradorTreinos = () => {
             ]
         },
         {
-            id: 5,
+            id: 6,
             name: 'Pausa de Descanso',
             key: 'descanso',
             title: 'Quanto tempo de descanso entre as séries?',
@@ -273,17 +287,45 @@ const GeradorTreinos = () => {
                 { id: 60, emoji: '🕕', title: '1 Minuto', desc: 'Recuperação padrão para força e volume.' },
                 { id: 90, emoji: '⌛', title: '1.5 Minutos', desc: 'Foco em cargas mais pesadas.' },
             ]
+        },
+        {
+            id: 7,
+            name: 'Dias de Treino',
+            key: 'dias',
+            title: 'Para quais dias é este treino?',
+            subtitle: 'O aluno verá este treino nos dias selecionados.',
+            options: [
+                { id: 'Seg', title: 'Segunda', desc: 'Treinar na Segunda' },
+                { id: 'Ter', title: 'Terça', desc: 'Treinar na Terça' },
+                { id: 'Qua', title: 'Quarta', desc: 'Treinar na Quarta' },
+                { id: 'Qui', title: 'Quinta', desc: 'Treinar na Quinta' },
+                { id: 'Sex', title: 'Sexta', desc: 'Treinar na Sexta' },
+                { id: 'Sáb', title: 'Sábado', desc: 'Treinar no Sábado' },
+                { id: 'Dom', title: 'Domingo', desc: 'Treinar no Domingo' },
+            ]
         }
     ];
 
     const currentStepData = stepsData[step - 1];
 
     const handleSelect = (optionId) => {
-        setSelections({ ...selections, [currentStepData.key]: optionId });
+        if (currentStepData.key === 'dias') {
+            const currentDias = selections.dias || [];
+            const novosDias = currentDias.includes(optionId)
+                ? currentDias.filter(d => d !== optionId)
+                : [...currentDias, optionId];
+            setSelections({ ...selections, dias: novosDias });
+        } else {
+            setSelections({ ...selections, [currentStepData.key]: optionId });
+        }
     };
 
     const nextStep = () => {
-        if (!selections[currentStepData.key]) {
+        if (currentStepData.key === 'dias' && (!selections.dias || selections.dias.length === 0)) {
+            toast.error('Escolha pelo menos um dia');
+            return;
+        }
+        if (currentStepData.key !== 'dias' && !selections[currentStepData.key]) {
             toast.error('Escolha uma opção para continuar');
             return;
         }
@@ -415,7 +457,7 @@ const GeradorTreinos = () => {
                         selectedExercises.push({
                             ...randomEx,
                             instanceId: `${randomEx.id || Date.now()}-${Math.random()}-${selectedExercises.length}`,
-                            series: seriesConfig,
+                            series: (randomEx.categoria?.toLowerCase() === 'cardio' || randomEx.muscle?.toLowerCase() === 'cardio') ? 1 : (Number(selections.series) || 3),
                             reps: repsConfig,
                             peso: '',
                             descanso: Number(selections.descanso) || 60
@@ -428,9 +470,13 @@ const GeradorTreinos = () => {
             // Workout Name based on Inputs
             const objLabel = stepsData[0].options.find(o => o.id === selections.objetivo)?.title || 'Gerado';
             const focoLabel = stepsData[3].options.find(o => o.id === selections.foco)?.title || 'Mix';
+            const localFinal = selections.local === 'academia' ? 'Academia' : 'Casa';
+            
             const novoTreinoConfig = {
                 nomeTreino: `Treino IA - ${focoLabel} (${objLabel})`,
                 exercicios: selectedExercises,
+                dias: selections.dias || [],
+                local: localFinal,
                 criadoEm: serverTimestamp(),
                 atualizadoEm: serverTimestamp(),
                 usuarioId: targetUid,
@@ -497,7 +543,7 @@ const GeradorTreinos = () => {
                                     {currentStepData.options.map((option) => (
                                         <OptionCard
                                             key={option.id}
-                                            $selected={selections[currentStepData.key] === option.id}
+                                            $selected={currentStepData.key === 'dias' ? (selections.dias || []).includes(option.id) : selections[currentStepData.key] === option.id}
                                             onClick={() => handleSelect(option.id)}
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}

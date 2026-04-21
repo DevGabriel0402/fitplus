@@ -59,7 +59,7 @@ const IconOption = styled.div`
 const Ajustes = () => {
     const { ajustes, atualizarAjustes, carregando } = useAjustes();
     const [config, setConfig] = useState({
-        corPrincipal: '#CB1313',
+        corPrincipal: '#8A2BE2',
         nomePainel: 'FITBODY',
         iconePainel: 'FaDumbbell'
     });
@@ -74,7 +74,7 @@ const Ajustes = () => {
 
     const cores = [
         '#9b8cff', '#50fa7b', '#ff79c6', '#8be9fd', '#ffb86c',
-        '#CB1313', '#ff5555', '#f1fa8c', '#bd93f9', '#ffcc00', '#00ffcc'
+        '#8A2BE2', '#ff5555', '#f1fa8c', '#bd93f9', '#ffcc00', '#00ffcc'
     ];
 
     const iconesFitness = [

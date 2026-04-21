@@ -42,11 +42,11 @@ const StatusBtn = styled.button`
   cursor: pointer;
   transition: all 0.2s;
   background: ${props => props.$active ? 'rgba(255, 95, 95, 0.1)' : 'rgba(76, 175, 80, 0.1)'};
-  color: ${props => props.$active ? '#ff5f5f' : '#4caf50'};
-  border: 1px solid ${props => props.$active ? '#ff5f5f33' : '#4caf5033'};
+  color: ${props => props.$active ? '#8A2BE2' : '#4caf50'};
+  border: 1px solid ${props => props.$active ? '#8A2BE233' : '#4caf5033'};
 
   &:hover {
-    background: ${props => props.$active ? '#ff5f5f' : '#4caf50'};
+    background: ${props => props.$active ? '#8A2BE2' : '#4caf50'};
     color: #fff;
   }
 `;
@@ -125,7 +125,7 @@ const GerenciarUsuarios = () => {
                                 <div>
                                     <h4 style={{ margin: 0, fontSize: '18px' }}>
                                         {user.nome || 'Sem Nome'}
-                                        {user.ativo === false && <span style={{ color: '#ff5f5f', fontSize: '12px', marginLeft: '8px' }}>(INATIVO)</span>}
+                                        {user.ativo === false && <span style={{ color: '#8A2BE2', fontSize: '12px', marginLeft: '8px' }}>(INATIVO)</span>}
                                     </h4>
                                     <Typography.Small style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
                                         <FiMail size={12} /> {user.email}
